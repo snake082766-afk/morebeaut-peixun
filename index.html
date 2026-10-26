@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2C1E08">
+<title>茉本｜培育陪跑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<style>
+:root{--bg:#F7F2E9;--card:#FFFDF8;--line:#E8DCC4;--soft:#F1E6CC;--ink:#2C1E08;--muted:#6B5B45;--gold:#8B6914;--gold2:#C9A961;--red:#8A3A22;--redbg:#F6DED5}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',system-ui,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:440px;margin:0 auto;padding:24px 20px 40px;display:flex;flex-direction:column;gap:16px;min-height:100vh}
+.serif{font-family:'Noto Serif TC',serif;font-weight:700}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.dark{background:var(--ink);color:var(--card);border-radius:18px;padding:16px 18px}
+.soft{background:var(--soft);border-radius:18px;padding:16px 18px}
+.label{font-size:13px;color:var(--gold);font-weight:700}
+.row{display:flex;gap:12px;align-items:center}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border-radius:14px;background:var(--gold);color:var(--card);font:700 16px inherit;font-family:inherit;border:none;text-decoration:none;cursor:pointer;width:100%}
+.btn[disabled]{opacity:.5}
+.btn2{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--gold2);background:var(--card);color:var(--ink);font-size:15px;font-family:inherit;cursor:pointer;width:100%}
+.back{display:flex;align-items:center;gap:6px;min-height:44px;font-size:14px;color:var(--muted);background:none;border:none;padding:0;font-family:inherit;cursor:pointer;align-self:flex-start}
+.pill{font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+.num{flex:none;width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--gold);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.opt{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);text-align:left;font-family:inherit;color:var(--ink);cursor:pointer;width:100%}
+.opt.on{border:2px solid var(--gold)}
+.opt b{display:block;font-size:15px}
+.opt small{display:block;font-size:12px;color:var(--muted)}
+textarea,input[type=text]{width:100%;border-radius:14px;border:1px solid var(--line);background:var(--card);padding:12px 14px;font-family:inherit;font-size:15px;line-height:1.6;color:var(--ink)}
+textarea:focus,input:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.step{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);font-size:20px;color:var(--ink);font-family:inherit;cursor:pointer}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap}
+.thumb{width:72px;height:96px;border-radius:10px;background:var(--soft);object-fit:cover}
+.add{width:72px;height:96px;border-radius:10px;border:1.5px dashed var(--gold2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-family:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.chip.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--soft)}
+.item:last-child{border-bottom:none}
+.tag{font-size:11px;font-weight:700;color:var(--ink);background:var(--gold2);border-radius:999px;padding:2px 8px}
+.bar{height:8px;border-radius:999px;background:var(--soft);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:999px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:12px 18px;border-radius:12px;font-size:14px;max-width:90vw}
+.center{text-align:center}
+.small{font-size:12px}
+</style>
+</head>
+<body>
+<main id="app" class="wrap" aria-live="polite"><p class="muted">載入中…</p></main>
+
+<script>
+/* ===== 設定：部署 Apps Script 後，把網址貼在這裡 ===== */
+var API = 'https://script.google.com/macros/s/AKfycbxzJQgf9zouBQEHfme6B__etQj1A1lRJQ9LggZnMWy_6TIMqCfGrrqbgh8JSsYkgSgp/exec';
+/* ================================================== */
+
+var params = new URLSearchParams(location.search);
+var CODE = params.get('u') || '';
+var DEMO = params.get('demo') === '1' || !API;
+var data = null;
+var view = 'main';
+var form = {};
+
+var ICON = {
+  target: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C9A961" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>',
+  task: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  clock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B5B45" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>',
+  back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B5B45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+  chat: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  up: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>',
+  star: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C9A961" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"/></svg>',
+  plus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+  down: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9A961" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg>',
+  can: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="11" fill="#8B6914"/><path d="M7 12.5l3 3 7-7" fill="none" stroke="#FFFDF8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  hint: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="none" stroke="#8B6914" stroke-width="2"/><path d="M12 2a10 10 0 0 1 0 20z" fill="#C9A961"/></svg>',
+  practice: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="none" stroke="#8B6914" stroke-width="2"/></svg>',
+  wait: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="none" stroke="#B5A68C" stroke-width="2" stroke-dasharray="3 3"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>'
+};
+var STATUS_TEXT = { can: '我自己做得到', hint: '提示一下就能做', practice: '練習中', wait: '還沒有機會看到' };
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function $(id) { return document.getElementById(id); }
+function toast(msg) {
+  var t = document.createElement('div');
+  t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function () { t.remove(); }, 2600);
+}
+function go(v) { view = v; render(); window.scrollTo(0, 0); }
+
+/* ---------- 資料 ---------- */
+
+function load() {
+  if (DEMO) { data = demoData(); render(); return; }
+  if (!CODE) { renderError('連結不完整，請用心蘋傳給你的專屬連結開啟。'); return; }
+  fetch(API + '?u=' + encodeURIComponent(CODE))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.ok) { renderError(d.error); return; }
+      data = d; render();
+    })
+    .catch(function () { renderError('連線不順，請稍後再開一次。'); });
+}
+
+function post(body) {
+  body.u = CODE;
+  if (DEMO) return new Promise(function (ok) { setTimeout(function () { ok({ ok: true }); }, 600); });
+  return fetch(API, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+}
+
+/* ---------- 畫面 ---------- */
+
+function render() {
+  var app = $('app');
+  if (data.stage === 'diagnosis') { app.innerHTML = viewDiagnosis(); bindDiagnosis(); return; }
+  if (data.stage === 'waiting') { app.innerHTML = viewWaiting(); return; }
+  if (view === 'report') { app.innerHTML = viewReport(); bindReport(); return; }
+  if (view === 'growth') { app.innerHTML = viewGrowth(); return; }
+  if (view === 'compare' && data.compare) { app.innerHTML = viewCompare(); return; }
+  app.innerHTML = viewMain();
+}
+
+function renderError(msg) {
+  $('app').innerHTML = '<div class="card center" style="margin-top:40px"><div class="serif" style="font-size:20px">打不開這一頁</div><p class="muted">' + esc(msg) + '</p></div>';
+}
+
+function head() {
+  return '<div class="row" style="justify-content:space-between"><div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>' +
+    (data.task ? '<div class="pill">第 ' + data.task.week + ' 週 · ' + esc(data.task.range) + '</div>' : '') + '</div>';
+}
+
+function backBtn(to, text) {
+  return '<button type="button" class="back" onclick="go(\'' + to + '\')">' + ICON.back + esc(text) + '</button>';
+}
+
+function viewMain() {
+  var d = data, t = d.task, h = '';
+  h += head();
+  h += '<div><h1 class="serif" style="font-size:26px;margin:0">' + esc(d.member.name) + '，這週一起練一件事</h1>' + (DEMO ? '<div class="small muted" style="margin-top:4px">示範畫面</div>' : '') + '</div>';
+  h += '<div class="dark row" style="gap:14px">' + ICON.target + '<div style="flex:1"><div style="font-size:12px;color:var(--gold2);letter-spacing:1px">你的改善方向</div><div style="font-size:17px;font-weight:700;margin-top:2px">' + esc(d.member.typeText) + '</div></div>' +
+    (t ? '<div class="center"><div style="font-size:20px;font-weight:700;color:var(--gold2)">' + t.week + '<span style="font-size:13px;color:var(--line)">/' + t.weeks + '</span></div><div style="font-size:11px;color:var(--line)">週</div></div>' : '') + '</div>';
+
+  if (t) {
+    h += '<div class="card" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:8px">' + ICON.task + '<div class="label">這週要改善</div></div>' +
+      '<div class="serif" style="font-size:20px;line-height:1.4">' + esc(t.title) + '</div><div style="display:flex;flex-direction:column;gap:10px">';
+    t.steps.forEach(function (s, i) {
+      h += '<div class="row" style="align-items:flex-start;gap:10px"><div class="num">' + (i + 1) + '</div><div style="font-size:14px;line-height:1.6">' + esc(s) + '</div></div>';
+    });
+    h += '</div><div class="row small muted" style="gap:6px;border-top:1px dashed var(--line);padding-top:12px;font-size:13px">' + ICON.clock + esc(d.deadline) + '回報 · ' + esc(t.evidence || '附對話截圖') + '</div></div>';
+    h += d.reported
+      ? '<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">這週已回報，心蘋會在週五前回覆你</div>'
+      : '<button type="button" class="btn" onclick="go(\'report\')">回報這週 ' + ICON.arrow + '</button>';
+  } else {
+    h += '<div class="card"><div class="label">這週任務</div><p style="margin:8px 0 0;line-height:1.7">心蘋正在準備你的任務，好了會先在 LINE 跟你說。</p></div>';
+  }
+
+  if (d.feedback) {
+    h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">心蘋給你的回饋 · ' + esc(d.feedback.date) + '</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.feedback.good) + (d.feedback.next ? '這週試試：' + esc(d.feedback.next) : '') + '</div></div></div>';
+  }
+
+  var can = d.growth.items.filter(function (x) { return x.status === 'can'; }).length;
+  h += '<button type="button" class="btn2" onclick="go(\'growth\')"><span class="row" style="gap:8px">' + ICON.up + '看我的成長卡</span><span class="small" style="color:var(--gold)">' + can + ' 項已做到</span></button>';
+  if (d.compare) h += '<button type="button" class="btn2" onclick="go(\'compare\')"><span>第 ' + esc(d.compare.round) + ' 輪成長對照</span>' + ICON.arrow + '</button>';
+  return h;
+}
+
+function viewReport() {
+  var t = data.task, h = '';
+  if (form.status === undefined) form = { status: '實際做了', count: 1, images: [], note: '', stuck: '' };
+  h += backBtn('main', '本週陪跑卡');
+  h += '<div><h1 class="serif" style="font-size:24px;margin:0">這週你做了嗎？</h1><div style="font-size:13px;margin-top:4px" class="muted">' + esc(t.title) + ' · 第 ' + t.week + ' 週</div></div>';
+  var opts = [
+    ['實際做了', '跟真的客人或夥伴做過'],
+    ['先練習了', '寫好訊息或找人演練，還沒發出'],
+    ['卡住了', '說說卡在哪，心蘋幫你拆小']
+  ];
+  h += '<div role="radiogroup" aria-label="這週的狀態" style="display:flex;flex-direction:column;gap:8px">';
+  opts.forEach(function (o) {
+    var on = form.status === o[0];
+    h += '<button type="button" role="radio" aria-checked="' + on + '" class="opt' + (on ? ' on' : '') + '" data-status="' + o[0] + '"><span style="flex:1"><b>' + o[0] + '</b><small>' + o[1] + '</small></span>' +
+      (on ? '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#8B6914"/></svg>' : '') + '</button>';
+  });
+  h += '</div>';
+
+  if (form.status !== '卡住了') {
+    h += '<div class="card row" style="justify-content:space-between;padding:14px 16px"><div style="font-size:14px;font-weight:500">做了幾位？</div><div class="row" style="gap:14px">' +
+      '<button type="button" class="step" id="minus" aria-label="減少">−</button><div id="count" style="font-size:22px;font-weight:700;min-width:20px" class="center">' + form.count + '</div>' +
+      '<button type="button" class="step" id="plus" aria-label="增加">+</button></div></div>';
+  }
+  if (form.status === '實際做了') {
+    h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:500">對話截圖<span class="small muted" style="font-weight:400">（可遮客人名字，最多 5 張）</span></div><div class="thumbs" id="thumbs">';
+    form.images.forEach(function (src) { h += '<img class="thumb" src="' + src + '" alt="已選的截圖">'; });
+    if (form.images.length < 5) h += '<label class="add" aria-label="新增截圖">' + ICON.plus + '<input type="file" id="file" accept="image/*" multiple style="display:none"></label>';
+    h += '</div></div>';
+  }
+  if (form.status === '卡住了') {
+    var stucks = ['不知道怎麼開口', '對方沒回', '問了但接不下去', '這週沒時間', '其他'];
+    h += '<div><div style="font-size:14px;font-weight:500;margin-bottom:8px">卡在哪？</div><div class="chips">';
+    stucks.forEach(function (s) { h += '<button type="button" class="chip' + (form.stuck === s ? ' on' : '') + '" data-stuck="' + s + '" aria-pressed="' + (form.stuck === s) + '">' + s + '</button>'; });
+    h += '</div></div>';
+  }
+  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="note" style="font-size:14px;font-weight:500">用一句話說說這次</label><textarea id="note" rows="3" placeholder="例如：客人說最近很容易斷髮，我先問她平常怎麼吹整。">' + esc(form.note) + '</textarea></div>';
+  h += '<button type="button" class="btn" id="send">送出回報</button><div class="small muted center">心蘋會在週五前回覆你</div>';
+  return h;
+}
+
+function bindReport() {
+  document.querySelectorAll('[data-status]').forEach(function (b) {
+    b.onclick = function () { saveNote(); form.status = b.dataset.status; render(); };
+  });
+  document.querySelectorAll('[data-stuck]').forEach(function (b) {
+    b.onclick = function () { saveNote(); form.stuck = b.dataset.stuck; render(); };
+  });
+  if ($('minus')) $('minus').onclick = function () { form.count = Math.max(0, form.count - 1); $('count').textContent = form.count; };
+  if ($('plus')) $('plus').onclick = function () { form.count = Math.min(20, form.count + 1); $('count').textContent = form.count; };
+  if ($('file')) $('file').onchange = function (e) {
+    saveNote();
+    var files = Array.prototype.slice.call(e.target.files, 0, 5 - form.images.length);
+    Promise.all(files.map(shrink)).then(function (list) { form.images = form.images.concat(list); render(); });
+  };
+  $('send').onclick = function () {
+    saveNote();
+    if (form.status === '實際做了' && !form.images.length) { toast('實際做了的話，請附至少一張對話截圖'); return; }
+    if (form.status === '卡住了' && !form.stuck) { toast('選一下卡在哪，心蘋比較好幫你'); return; }
+    var btn = $('send'); btn.disabled = true; btn.textContent = '送出中…';
+    post({ action: 'report', round: data.task.round, week: data.task.week, status: form.status,
+      count: form.status === '卡住了' ? 0 : form.count, note: form.note, stuck: form.stuck, images: form.images })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.error);
+        data.reported = true; form = {}; toast('收到了，謝謝你！'); go('main');
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = '送出回報'; toast('沒有送出，請再試一次'); });
+  };
+}
+function saveNote() { if ($('note')) form.note = $('note').value; }
+
+function shrink(file) {
+  return new Promise(function (ok) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      var max = 1280, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = url;
+  });
+}
+
+function viewGrowth() {
+  var g = data.growth, h = '';
+  h += backBtn('main', '本週陪跑卡');
+  h += '<div><div class="label" style="font-size:12px;letter-spacing:1px">你的成長卡' + (g.date ? ' · ' + esc(g.date) : '') + '</div><h1 class="serif" style="font-size:22px;margin:4px 0 0;line-height:1.4">' + esc(data.member.typeText) + '</h1></div>';
+  var news = g.items.filter(function (x) { return x.isNew; }).length;
+  if (news) h += '<div class="dark row">' + ICON.star + '<div style="font-size:14px;line-height:1.6">這兩週你多了 <b style="color:var(--gold2)">' + news + ' 件</b>自己做得到的事</div></div>';
+
+  var order = { can: 0, hint: 1, practice: 2, wait: 3 };
+  var groups = {};
+  g.items.forEach(function (x) { (groups[x.comp] = groups[x.comp] || []).push(x); });
+  Object.keys(groups).forEach(function (comp) {
+    h += '<div class="card" style="padding:16px"><div class="label" style="margin-bottom:4px">' + esc(comp) + '</div>';
+    groups[comp].slice().sort(function (a, b) { return order[a.status] - order[b.status]; }).forEach(function (x) {
+      var sub = x.status === 'can' ? esc(x.date) + ' 確認' + (x.note ? ' · ' + esc(x.note) : '') : STATUS_TEXT[x.status];
+      h += '<div class="item">' + ICON[x.status] + '<div style="flex:1"><div class="row" style="gap:6px;flex-wrap:wrap"><span style="font-size:15px;font-weight:500' + (x.status === 'wait' ? ';color:var(--muted)' : '') + '">' + esc(x.text) + '</span>' + (x.isNew ? '<span class="tag">新進步</span>' : '') + '</div><div class="small muted" style="margin-top:2px">' + sub + '</div></div></div>';
+    });
+    h += '</div>';
+  });
+
+  if (g.progress.length) {
+    h += '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="label">第 ' + (data.task ? data.task.round : '') + ' 輪目標進度</div>';
+    g.progress.forEach(function (p) {
+      var pct = p.target ? Math.min(100, Math.round(p.done / p.target * 100)) : 0;
+      h += '<div><div class="row" style="justify-content:space-between;font-size:14px"><span>' + esc(p.label) + '</span><b>' + p.done + ' / ' + p.target + '</b></div><div class="bar"><i style="width:' + pct + '%"></i></div>' + (p.pending ? '<div class="small muted" style="margin-top:4px">另有 ' + p.pending + ' 筆確認中</div>' : '') + '</div>';
+    });
+    h += '</div>';
+  }
+  if (g.next) h += '<div class="soft row">' + ICON.arrow.replace('currentColor', '#8B6914') + '<div style="font-size:14px;line-height:1.6"><b>下一步只練一件：</b>' + esc(g.next) + '</div></div>';
+  h += '<div class="small muted center">打勾的項目都是心蘋看過你的實際紀錄後確認的</div>';
+  return h;
+}
+
+function viewCompare() {
+  var c = data.compare, h = '';
+  h += backBtn('main', '本週陪跑卡');
+  h += '<div><div class="label" style="font-size:12px;letter-spacing:1px">第 ' + esc(c.round) + ' 輪成長對照</div><h1 class="serif" style="font-size:24px;margin:4px 0 0">看看之前的你</h1></div>';
+  h += '<div class="card"><div class="row small muted" style="justify-content:space-between"><b>之前 · 你說</b><span>' + esc(c.beforeDate) + '</span></div><div class="serif" style="font-size:17px;line-height:1.7;margin-top:8px;color:var(--muted)">「' + esc(c.before) + '」</div></div>';
+  h += '<div class="center">' + ICON.down + '</div>';
+  h += '<div class="dark"><div class="row small" style="justify-content:space-between;color:var(--gold2)"><b>現在 · 你做到</b><span>' + esc(c.afterDate) + '</span></div><div class="serif" style="font-size:17px;line-height:1.7;margin-top:8px">「' + esc(c.after) + '」</div></div>';
+  if (c.done.length) {
+    h += '<div class="card"><div class="label" style="margin-bottom:10px">這一輪你做到了</div><div class="chips">';
+    c.done.forEach(function (x) { h += '<span class="row" style="gap:4px;font-size:13px;background:var(--soft);border-radius:999px;padding:6px 12px">' + ICON.check + esc(x) + '</span>'; });
+    h += '</div></div>';
+  }
+  if (c.note) h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">心蘋寫給你</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(c.note) + '</div></div></div>';
+  if (c.nextRound) h += '<div class="row" style="border:1px dashed var(--gold2);border-radius:14px;padding:12px 14px">' + ICON.up + '<div style="font-size:14px"><b>下一輪要練：</b>' + esc(c.nextRound) + '</div></div>';
+  return h;
+}
+
+function viewDiagnosis() {
+  var dir = data.member.track === '董事';
+  var sits = dir
+    ? ['夥伴有，但大多不動', '我會做，但帶不動人', '團隊很依賴我，我一停就停', '其他']
+    : ['邀得到人，但對方不會買', '有接觸的人，但邀不到場', '有會員，但他們不動', '自己會做，但帶不動夥伴', '其他'];
+  if (form.situation === undefined) form = { situation: '', story: '', hours: '', goal: '' };
+  var h = '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>';
+  h += '<div><h1 class="serif" style="font-size:24px;margin:0">' + esc(data.member.name) + '，先聊聊你現在的狀況</h1><p class="muted" style="font-size:14px;line-height:1.7;margin:8px 0 0">大約 5 分鐘。沒有對錯，越接近真實越好，心蘋會依這份幫你找出最值得先練的一件事。</p></div>';
+  h += '<div><div style="font-size:15px;font-weight:700;margin-bottom:8px">1. 哪一個最像你現在的情況？</div><div role="radiogroup" aria-label="最像的情況" style="display:flex;flex-direction:column;gap:8px">';
+  sits.forEach(function (s) {
+    var on = form.situation === s;
+    h += '<button type="button" role="radio" aria-checked="' + on + '" class="opt' + (on ? ' on' : '') + '" data-sit="' + s + '" style="min-height:52px"><span style="flex:1"><b style="font-size:15px;font-weight:500">' + s + '</b></span></button>';
+  });
+  h += '</div></div>';
+  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="story" style="font-size:15px;font-weight:700">2. ' + (dir ? '最近一次你帶夥伴做一件事：你怎麼做、他後來有自己做嗎？' : '最近 14 天的一位客人：你說了什麼、對方怎麼回、結果如何？') + '</label><textarea id="story" rows="5" placeholder="照實寫就好，可以不寫名字">' + esc(form.story) + '</textarea></div>';
+  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="hours" style="font-size:15px;font-weight:700">3. 每週大概能投入多少時間？</label><input type="text" id="hours" placeholder="例如：5 小時，多在晚上" value="' + esc(form.hours) + '"></div>';
+  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="goal" style="font-size:15px;font-weight:700">4. 接下來最想達到什麼？</label><input type="text" id="goal" placeholder="例如：淡季也能每月穩定有客人回購" value="' + esc(form.goal) + '"></div>';
+  h += '<button type="button" class="btn" id="sendDiag">送出</button>';
+  return h;
+}
+
+function bindDiagnosis() {
+  var keep = function () { form.story = $('story').value; form.hours = $('hours').value; form.goal = $('goal').value; };
+  document.querySelectorAll('[data-sit]').forEach(function (b) {
+    b.onclick = function () { keep(); form.situation = b.dataset.sit; render(); };
+  });
+  $('sendDiag').onclick = function () {
+    keep();
+    if (!form.situation) { toast('先選一個最像你的情況'); return; }
+    if (form.story.trim().length < 15) { toast('第 2 題再多寫一點，越具體越好'); return; }
+    var btn = $('sendDiag'); btn.disabled = true; btn.textContent = '送出中…';
+    post({ action: 'diagnosis', situation: form.situation, story: form.story, hours: form.hours, goal: form.goal })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.error);
+        data.stage = 'waiting'; form = {}; render();
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = '送出'; toast('沒有送出，請再試一次'); });
+  };
+}
+
+function viewWaiting() {
+  return '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>' +
+    '<div class="card center" style="margin-top:24px;padding:28px 20px">' + ICON.check.replace(/14/g, '40') +
+    '<div class="serif" style="font-size:22px;margin-top:12px">收到了，謝謝你</div><p class="muted" style="line-height:1.8;margin:10px 0 0">心蘋會看過你寫的內容，跟你確認這次要練的方向。<br>任務準備好後，打開這個連結就看得到。</p></div>';
+}
+
+/* ---------- 示範資料（?demo=1 或尚未設定 API 時） ---------- */
+
+function demoData() {
+  var stage = params.get('stage') || 'active';
+  return {
+    ok: true, stage: stage, deadline: '週四 18:00 前',
+    member: { name: '小芸', track: params.get('track') || '35位', type: 'T1', typeText: '讓客人說出需求並成交' },
+    task: { round: 1, week: 2, weeks: 4, range: '11/9–11/15', title: '先問客人的使用狀況，再推薦',
+      steps: ['找 2 位雙十買過的客人', '用這句開頭：「這兩週用下來，頭髮有沒有不一樣？」', '聽完先複述一次：「所以你最在意的是……，對嗎？」'],
+      evidence: '附對話截圖（可遮名字）' },
+    reported: false,
+    feedback: { date: '11/8', good: '你問「主要想改善什麼」問得很好，客人有回答。', next: '多確認一句，讓客人覺得被聽懂。' },
+    growth: {
+      date: '11/13', next: '客人回得很短時換個問法',
+      items: [
+        { comp: '讓客人說出需求', text: '能自己開口問客人的使用狀況', status: 'can', date: '10/30' },
+        { comp: '讓客人說出需求', text: '能問出客人真正的困擾', status: 'can', date: '11/13', isNew: true, note: '上次還需要提示' },
+        { comp: '讓客人說出需求', text: '能問出客人的顧慮或購買時機', status: 'hint', date: '11/13' },
+        { comp: '讓客人說出需求', text: '能複述客人的需求並跟他確認', status: 'practice', date: '11/6' },
+        { comp: '處理猶豫並成交', text: '客人有疑問時先問原因', status: 'hint', date: '11/6' },
+        { comp: '處理猶豫並成交', text: '針對原因回應，不急著降價送贈品', status: 'wait' },
+        { comp: '處理猶豫並成交', text: '能提出明確的下一步', status: 'wait' },
+        { comp: '處理猶豫並成交', text: '能完成下單或約好下次時間', status: 'wait' }
+      ],
+      progress: [{ label: '需求對話', done: 2, target: 3, pending: 0 }, { label: '客人下單', done: 0, target: 1, pending: 1 }]
+    },
+    compare: { round: 1, before: '我一開口就怕像在推銷，所以都等客人自己來問。', beforeDate: '10/28 初次盤點',
+      after: '這兩週用下來，頭髮有沒有不一樣？你最在意的是哪個部分？', afterDate: '11/12 對話紀錄',
+      done: ['主動開口', '問出困擾', '複述確認'], note: '一個月前你在等客人開口，現在是你先問。這是你自己做到的。', nextRound: '客人猶豫時怎麼接' }
+  };
+}
+
+load();
+</script>
+</body>
+</html>
