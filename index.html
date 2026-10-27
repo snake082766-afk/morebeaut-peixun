@@ -286,7 +286,7 @@ function viewGrowth() {
     h += '<div class="card" style="display:flex;flex-direction:column;gap:12px"><div class="label">第 ' + (data.task ? data.task.round : '') + ' 輪目標進度</div>';
     g.progress.forEach(function (p) {
       var pct = p.target ? Math.min(100, Math.round(p.done / p.target * 100)) : 0;
-      h += '<div><div class="row" style="justify-content:space-between;font-size:14px"><span>' + esc(p.label) + '</span><b>' + p.done + ' / ' + p.target + '</b></div><div class="bar"><i style="width:' + pct + '%"></i></div>' + (p.pending ? '<div class="small muted" style="margin-top:4px">另有 ' + p.pending + ' 筆確認中</div>' : '') + '</div>';
+      h += '<div><div class="row" style="justify-content:space-between;font-size:14px"><span>' + esc(p.label) + '</span><b>' + p.done + (p.unit || '') + ' / ' + p.target + (p.unit || '') + '</b></div><div class="bar"><i style="width:' + pct + '%"></i></div>' + (p.pending ? '<div class="small muted" style="margin-top:4px">另有 ' + p.pending + ' 筆確認中</div>' : '') + '</div>';
     });
     h += '</div>';
   }
