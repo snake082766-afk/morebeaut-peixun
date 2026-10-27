@@ -155,9 +155,13 @@ function viewMain() {
       h += '<div class="row" style="align-items:flex-start;gap:10px"><div class="num">' + (i + 1) + '</div><div style="font-size:14px;line-height:1.6">' + esc(s) + '</div></div>';
     });
     h += '</div><div class="row small muted" style="gap:6px;border-top:1px dashed var(--line);padding-top:12px;font-size:13px">' + ICON.clock + esc(d.deadline) + '回報 · ' + esc(t.evidence || '附對話截圖') + '</div></div>';
+    if (d.redo) {
+      h += '<div class="row" style="align-items:flex-start;background:var(--redbg);border-radius:18px;padding:16px 18px">' + ICON.chat.replace('#8B6914', '#8A3A22') +
+        '<div><div style="font-size:12px;font-weight:700;color:var(--red)">心蘋請你補充</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.redo) + '</div></div></div>';
+    }
     h += d.reported
-      ? '<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">這週已回報，心蘋會在週五前回覆你</div>'
-      : '<button type="button" class="btn" onclick="go(\'report\')">回報這週 ' + ICON.arrow + '</button>';
+      ?'<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">這週已回報，心蘋會在週五前回覆你</div>'
+      : '<button type="button" class="btn" onclick="go(\'report\')">' + (d.redo ? '補交回報 ' : '回報這週 ') + ICON.arrow + '</button>';
   } else {
     h += '<div class="card"><div class="label">這週任務</div><p style="margin:8px 0 0;line-height:1.7">心蘋正在準備你的任務，好了會先在 LINE 跟你說。</p></div>';
   }
