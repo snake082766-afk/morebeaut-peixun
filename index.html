@@ -94,13 +94,15 @@ function toast(msg) {
   document.body.appendChild(t);
   setTimeout(function () { t.remove(); }, 2600);
 }
+function COACH() { return (data && data.coach) || '心蘋'; }
+function REPLY() { return (data && data.replyNote) || '看過後會回覆你'; }
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
 /* ---------- 資料 ---------- */
 
 function load() {
   if (DEMO) { data = demoData(); render(); return; }
-  if (!CODE) { renderError('連結不完整，請用心蘋傳給你的專屬連結開啟。'); return; }
+  if (!CODE) { renderError('連結不完整，請用傳給你的專屬連結開啟。'); return; }
   fetch(API + '?u=' + encodeURIComponent(CODE))
     .then(function (r) { return r.json(); })
     .then(function (d) {
@@ -157,17 +159,17 @@ function viewMain() {
     h += '</div><div class="row small muted" style="gap:6px;border-top:1px dashed var(--line);padding-top:12px;font-size:13px">' + ICON.clock + esc(d.deadline) + '回報 · ' + esc(t.evidence || '附對話截圖') + '</div></div>';
     if (d.redo) {
       h += '<div class="row" style="align-items:flex-start;background:var(--redbg);border-radius:18px;padding:16px 18px">' + ICON.chat.replace('#8B6914', '#8A3A22') +
-        '<div><div style="font-size:12px;font-weight:700;color:var(--red)">心蘋請你補充</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.redo) + '</div></div></div>';
+        '<div><div style="font-size:12px;font-weight:700;color:var(--red)">' + esc(COACH()) + '請你補充</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.redo) + '</div></div></div>';
     }
     h += d.reported
-      ?'<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">這週已回報，心蘋會在週五前回覆你</div>'
+      ?'<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">這週已回報，' + esc(COACH() + REPLY()) + '</div>'
       : '<button type="button" class="btn" onclick="go(\'report\')">' + (d.redo ? '補交回報 ' : '回報這週 ') + ICON.arrow + '</button>';
   } else {
-    h += '<div class="card"><div class="label">這週任務</div><p style="margin:8px 0 0;line-height:1.7">心蘋正在準備你的任務，好了會先在 LINE 跟你說。</p></div>';
+    h += '<div class="card"><div class="label">這週任務</div><p style="margin:8px 0 0;line-height:1.7">' + esc(COACH()) + '正在準備你的任務，好了會先在 LINE 跟你說。</p></div>';
   }
 
   if (d.feedback) {
-    h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">心蘋給你的回饋 · ' + esc(d.feedback.date) + '</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.feedback.good) + (d.feedback.next ? '這週試試：' + esc(d.feedback.next) : '') + '</div></div></div>';
+    h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">' + esc(COACH()) + '給你的回饋 · ' + esc(d.feedback.date) + '</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.feedback.good) + (d.feedback.next ? '這週試試：' + esc(d.feedback.next) : '') + '</div></div></div>';
   }
 
   var can = d.growth.items.filter(function (x) { return x.status === 'can'; }).length;
@@ -184,7 +186,7 @@ function viewReport() {
   var opts = [
     ['實際做了', '跟真的客人或夥伴做過'],
     ['先練習了', '寫好訊息或找人演練，還沒發出'],
-    ['卡住了', '說說卡在哪，心蘋幫你拆小']
+    ['卡住了', '說說卡在哪，' + COACH() + '幫你拆小']
   ];
   h += '<div role="radiogroup" aria-label="這週的狀態" style="display:flex;flex-direction:column;gap:8px">';
   opts.forEach(function (o) {
@@ -212,7 +214,7 @@ function viewReport() {
     h += '</div></div>';
   }
   h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="note" style="font-size:14px;font-weight:500">用一句話說說這次</label><textarea id="note" rows="3" placeholder="例如：客人說最近很容易斷髮，我先問她平常怎麼吹整。">' + esc(form.note) + '</textarea></div>';
-  h += '<button type="button" class="btn" id="send">送出回報</button><div class="small muted center">心蘋會在週五前回覆你</div>';
+  h += '<button type="button" class="btn" id="send">送出回報</button><div class="small muted center">' + esc(COACH() + REPLY()) + '</div>';
   return h;
 }
 
@@ -233,7 +235,7 @@ function bindReport() {
   $('send').onclick = function () {
     saveNote();
     if (form.status === '實際做了' && !form.images.length) { toast('實際做了的話，請附至少一張對話截圖'); return; }
-    if (form.status === '卡住了' && !form.stuck) { toast('選一下卡在哪，心蘋比較好幫你'); return; }
+    if (form.status === '卡住了' && !form.stuck) { toast('選一下卡在哪，' + COACH() + '比較好幫你'); return; }
     var btn = $('send'); btn.disabled = true; btn.textContent = '送出中…';
     post({ action: 'report', round: data.task.round, week: data.task.week, status: form.status,
       count: form.status === '卡住了' ? 0 : form.count, note: form.note, stuck: form.stuck, images: form.images })
@@ -289,7 +291,7 @@ function viewGrowth() {
     h += '</div>';
   }
   if (g.next) h += '<div class="soft row">' + ICON.arrow.replace('currentColor', '#8B6914') + '<div style="font-size:14px;line-height:1.6"><b>下一步只練一件：</b>' + esc(g.next) + '</div></div>';
-  h += '<div class="small muted center">打勾的項目都是心蘋看過你的實際紀錄後確認的</div>';
+  h += '<div class="small muted center">打勾的項目都是' + esc(COACH()) + '看過你的實際紀錄後確認的</div>';
   return h;
 }
 
@@ -305,7 +307,7 @@ function viewCompare() {
     c.done.forEach(function (x) { h += '<span class="row" style="gap:4px;font-size:13px;background:var(--soft);border-radius:999px;padding:6px 12px">' + ICON.check + esc(x) + '</span>'; });
     h += '</div></div>';
   }
-  if (c.note) h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">心蘋寫給你</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(c.note) + '</div></div></div>';
+  if (c.note) h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">' + esc(COACH()) + '寫給你</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(c.note) + '</div></div></div>';
   if (c.nextRound) h += '<div class="row" style="border:1px dashed var(--gold2);border-radius:14px;padding:12px 14px">' + ICON.up + '<div style="font-size:14px"><b>下一輪要練：</b>' + esc(c.nextRound) + '</div></div>';
   return h;
 }
@@ -317,7 +319,7 @@ function viewDiagnosis() {
     : ['邀得到人，但對方不會買', '有接觸的人，但邀不到場', '有會員，但他們不動', '自己會做，但帶不動夥伴', '其他'];
   if (form.situation === undefined) form = { situation: '', story: '', hours: '', goal: '' };
   var h = '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>';
-  h += '<div><h1 class="serif" style="font-size:24px;margin:0">' + esc(data.member.name) + '，先聊聊你現在的狀況</h1><p class="muted" style="font-size:14px;line-height:1.7;margin:8px 0 0">大約 5 分鐘。沒有對錯，越接近真實越好，心蘋會依這份幫你找出最值得先練的一件事。</p></div>';
+  h += '<div><h1 class="serif" style="font-size:24px;margin:0">' + esc(data.member.name) + '，先聊聊你現在的狀況</h1><p class="muted" style="font-size:14px;line-height:1.7;margin:8px 0 0">大約 5 分鐘。沒有對錯，越接近真實越好，' + esc(COACH()) + '會依這份幫你找出最值得先練的一件事。</p></div>';
   h += '<div><div style="font-size:15px;font-weight:700;margin-bottom:8px">1. 哪一個最像你現在的情況？</div><div role="radiogroup" aria-label="最像的情況" style="display:flex;flex-direction:column;gap:8px">';
   sits.forEach(function (s) {
     var on = form.situation === s;
@@ -353,7 +355,7 @@ function bindDiagnosis() {
 function viewWaiting() {
   return '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>' +
     '<div class="card center" style="margin-top:24px;padding:28px 20px">' + ICON.check.replace(/14/g, '40') +
-    '<div class="serif" style="font-size:22px;margin-top:12px">收到了，謝謝你</div><p class="muted" style="line-height:1.8;margin:10px 0 0">心蘋會看過你寫的內容，跟你確認這次要練的方向。<br>任務準備好後，打開這個連結就看得到。</p></div>';
+    '<div class="serif" style="font-size:22px;margin-top:12px">收到了，謝謝你</div><p class="muted" style="line-height:1.8;margin:10px 0 0">' + esc(COACH()) + '會看過你寫的內容，跟你確認這次要練的方向。<br>任務準備好後，打開這個連結就看得到。</p></div>';
 }
 
 /* ---------- 示範資料（?demo=1 或尚未設定 API 時） ---------- */
@@ -361,7 +363,7 @@ function viewWaiting() {
 function demoData() {
   var stage = params.get('stage') || 'active';
   return {
-    ok: true, stage: stage, deadline: '週四 18:00 前',
+    ok: true, stage: stage, deadline: '週四 18:00 前', coach: '心蘋', replyNote: '看過後會回覆你',
     member: { name: '小芸', track: params.get('track') || '35位', type: 'T1', typeText: '讓客人說出需求並成交' },
     task: { round: 1, week: 2, weeks: 4, range: '11/9–11/15', title: '先問客人的使用狀況，再推薦',
       steps: ['找 2 位雙十買過的客人', '用這句開頭：「這兩週用下來，頭髮有沒有不一樣？」', '聽完先複述一次：「所以你最在意的是……，對嗎？」'],
