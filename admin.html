@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2C1E08">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="培育管理">
+<title>培育陪跑｜管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<style>
+:root{--bg:#F7F2E9;--card:#FFFDF8;--line:#E8DCC4;--soft:#F1E6CC;--ink:#2C1E08;--muted:#6B5B45;--gold:#8B6914;--gold2:#C9A961;--red:#8A3A22;--redbg:#F6DED5;--blue:#2F5D8A;--bluebg:#E3EAF2}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',system-ui,sans-serif;-webkit-text-size-adjust:100%;font-size:15px}
+.top{position:sticky;top:0;z-index:5;background:var(--ink);color:#FFFDF8;padding:12px 16px 0}
+.top .row1{display:flex;align-items:center;gap:10px;max-width:960px;margin:0 auto}
+.top b{color:var(--gold2);letter-spacing:1px;font-size:15px}
+.top .meta{color:var(--line);font-size:12px;flex:1;text-align:right}
+.tabs{display:flex;gap:4px;max-width:960px;margin:10px auto 0}
+.tab{flex:1;min-height:44px;border:none;background:transparent;color:var(--line);font:inherit;font-size:15px;border-bottom:3px solid transparent;cursor:pointer}
+.tab.on{color:#FFFDF8;border-bottom-color:var(--gold2);font-weight:700}
+.tab .n{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:var(--gold2);color:var(--ink);font-size:12px;font-weight:700;margin-left:4px}
+main{max-width:960px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:14px}
+h1{font-family:'Noto Serif TC',serif;font-size:22px;margin:0;line-height:1.4}
+h2{font-size:16px;margin:0 0 10px}
+.muted{color:var(--muted)}.small{font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile .l{font-size:12px;color:var(--muted)}.tile .v{font-size:24px;font-weight:700;margin-top:2px}.tile .v span{font-size:13px;color:var(--muted);font-weight:500}
+.alert{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.alert.on{border:2px solid var(--ink)}
+.alert i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px}
+.alert b{display:block;font-size:14px}.alert small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#FFFDF8}
+.person{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.person .main{flex:1;min-width:0}
+.person .nm{font-weight:700;font-size:16px}
+.person .sub{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.5}
+.badge{flex:none;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.b-up{background:var(--soft);color:#6B4F0A}.b-fix{background:var(--redbg);color:var(--red)}.b-wait{background:var(--bluebg);color:var(--blue)}.b-ok{background:#EFEAE0;color:#4A3D2A}
+.it{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--soft)}.it:last-child{border-bottom:none}
+.mk{width:22px;flex:none;color:var(--gold);font-weight:700}
+.bar{height:8px;border-radius:999px;background:var(--soft);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gold)}
+.tag{display:inline-block;font-size:12px;background:var(--soft);border-radius:999px;padding:4px 10px;margin:4px 6px 0 0}
+.tag.dark{background:var(--ink);color:#FFFDF8}
+.quote{background:var(--bg);border-radius:10px;padding:10px 12px;line-height:1.7;margin-top:6px}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:44px;border:none;background:none;font:inherit;color:var(--muted);cursor:pointer;padding:0}
+.btn{min-height:48px;border-radius:12px;border:none;background:var(--gold);color:#FFFDF8;font:inherit;font-weight:700;font-size:15px;cursor:pointer;width:100%}
+.btn2{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;cursor:pointer;width:100%}
+button:disabled{opacity:.5}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+input[type=text],textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:var(--ink)}
+textarea{min-height:72px;resize:vertical;line-height:1.6}
+.qi{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
+.qi .ty{flex:none;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--soft);color:#6B4F0A}
+.qi .ty.fail{background:var(--redbg);color:var(--red)}
+.imgs{display:flex;gap:8px;overflow-x:auto}.imgs img{height:260px;border-radius:10px;border:1px solid var(--line)}
+.act{padding:10px 0;border-bottom:1px solid var(--soft)}.act:last-child{border-bottom:none}
+.act .h{display:flex;gap:8px;align-items:baseline;justify-content:space-between}
+.lv{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lv button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:13px;color:var(--ink)}
+.lv button.on{background:var(--ink);border-color:var(--ink);color:#FFFDF8}
+.lv button.warn{border-color:var(--red);color:var(--red)}
+.warnbox{background:var(--redbg);color:var(--red);border-radius:12px;padding:10px 12px;line-height:1.6}
+pre{white-space:pre-wrap;word-break:break-word;font:inherit;font-size:14px;line-height:1.75;margin:0}
+.empty{padding:28px 0;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#FFFDF8;padding:12px 18px;border-radius:12px;font-size:14px;max-width:90vw;z-index:9}
+@media (min-width:760px){.two{display:grid;grid-template-columns:3fr 2fr;gap:14px;align-items:start}.two>div{display:flex;flex-direction:column;gap:14px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="row1"><b>培育陪跑｜管理</b><span class="meta" id="meta"></span></div>
+  <nav class="tabs" aria-label="分頁">
+    <button type="button" class="tab on" data-tab="dash">總覽</button>
+    <button type="button" class="tab" data-tab="queue">待核准<span class="n" id="qn" hidden></span></button>
+    <button type="button" class="tab" data-tab="summary">週報</button>
+  </nav>
+</div>
+<main id="app" aria-live="polite"><div class="empty">讀取中…</div></main>
+
+<script>
+/* 與經銷商網頁相同的 Apps Script 網址 */
+var API = 'https://script.google.com/macros/s/AKfycbxzJQgf9zouBQEHfme6B__etQj1A1lRJQ9LggZnMWy_6TIMqCfGrrqbgh8JSsYkgSgp/exec';
+
+var KEY = new URLSearchParams(location.search).get('k') || '';
+try { if (KEY) localStorage.setItem('peixun_admin', KEY); else KEY = localStorage.getItem('peixun_admin') || ''; } catch (e) {}
+var tab = 'dash', D = null, filter = 'todo', alertKey = '', cur = null;
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
+function show(h) { $('app').innerHTML = h; window.scrollTo(0, 0); }
+function loading(m) { show('<div class="empty">' + esc(m || '讀取中…') + '</div>'); }
+function err(e) { show('<div class="card"><b>讀不到資料</b><p class="muted">' + esc((e && e.message) || e) + '</p></div>'); }
+
+function get(fn, extra) {
+  var q = API + '?admin=' + encodeURIComponent(KEY) + '&fn=' + fn + (extra || '');
+  return fetch(q).then(function (r) { return r.json(); }).then(function (r) { if (!r.ok) throw new Error(r.error); return r.data; });
+}
+function post(body) {
+  body.admin = KEY;
+  return fetch(API, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (r) { if (!r.ok) throw new Error(r.error); return r; });
+}
+
+document.querySelectorAll('.tab').forEach(function (b) {
+  b.onclick = function () { tab = b.getAttribute('data-tab'); document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === b); }); route(); };
+});
+function route() { if (tab === 'dash') loadDash(); else if (tab === 'queue') loadQueue(); else loadSummary(); }
+function setQ(n) { var el = $('qn'); el.hidden = !n; el.textContent = n || ''; }
+
+/* ---------- 總覽 ---------- */
+var BADGE = { '進步': 'b-up', '要加強': 'b-fix', '待補證據': 'b-wait', '待確認方向': 'b-wait', '照進度': 'b-ok', '暫緩': 'b-ok' };
+function loadDash() { loading(); get('dash').then(function (d) { D = d; setQ(d.queue); $('meta').textContent = '第 ' + d.round + ' 輪 · ' + d.stamp; renderDash(); }).catch(err); }
+function renderDash() {
+  var c = D.c, ok = D.rows.length - c.todo;
+  var h = '<div><h1>本週要處理 ' + c.todo + ' 位，' + ok + ' 位照進度走</h1><div class="small muted" style="margin-top:4px">只計已核對的紀錄；未回報者留在分母</div></div>';
+  h += '<div class="tiles">' + tile('已初次盤點', c.diagnosed, c.members) + tile('已派任務', c.assigned, c.members) + tile('本週已回報', c.reported, c.dueNow) + tile('證據已核對', c.verified, c.reported) + tile('有進步', c.improved, c.compared) + '</div>';
+  h += alertBtn('miss', '連續 2 項任務未完成', c.miss2, '先問卡點，把任務縮成一個動作', 'var(--red)');
+  h += alertBtn('pending', '證據待補超過 1 週', c.pendingP, '提醒補截圖，未補前不打勾', 'var(--blue)');
+  h += alertBtn('hint', '同一動作 2 次仍需提示', c.hint2, '看一次真實案例，示範後重做', 'var(--gold)');
+  var fs = [['todo', '需要我處理'], ['all', '全部'], ['董事', '董事'], ['35位', '35位']];
+  if (D.rows.some(function (r) { return r.track === '擴大梯次'; })) fs.push(['擴大梯次', '擴大梯次']);
+  h += '<div class="chips" role="group" aria-label="篩選">' + fs.map(function (f) { return '<button type="button" class="chip' + (filter === f[0] && !alertKey ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + ' ' + D.rows.filter(function (r) { return match(r, f[0]); }).length + '</button>'; }).join('') + '</div>';
+  var rows = D.rows.filter(function (r) {
+    if (alertKey === 'miss') return r.miss >= 2 && !r.paused;
+    if (alertKey === 'pending') return r.pending > 0 && !r.paused;
+    if (alertKey === 'hint') return r.hintTwice > 0 && !r.paused;
+    return match(r, filter);
+  });
+  if (!D.rows.length) h += '<div class="card empty">名單還是空的</div>';
+  else if (!rows.length) h += '<div class="card empty">這個篩選沒有人</div>';
+  rows.forEach(function (r) {
+    h += '<button type="button" class="person" data-id="' + esc(r.id) + '"><span class="main"><span class="nm">' + esc(r.name) + '</span> <span class="small muted">' + esc(r.track) + '</span>' +
+      '<span class="sub" style="display:block">' + esc(r.typeText || '尚未確認方向') + '</span>' +
+      '<span class="sub" style="display:block">' + (r.week ? '第 ' + r.week + ' 週 · ' : '') + esc(r.thisRep) + (r.miss ? ' · 連續未完成 ' + r.miss : '') + '</span>' +
+      '<span class="sub" style="display:block">' + esc(r.latest) + (r.newOnes ? ' · 新進步 ' + r.newOnes : '') + '</span>' +
+      (r.result ? '<span class="sub" style="display:block">' + esc(r.result) + '</span>' : '') +
+      (r.next && r.next !== '—' ? '<span class="sub" style="display:block;color:var(--gold)">→ ' + esc(r.next) + '</span>' : '') +
+      '</span><span class="badge ' + (BADGE[r.verdict] || 'b-ok') + '">' + esc(r.verdict) + '</span></button>';
+  });
+  show(h);
+  document.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { filter = b.getAttribute('data-f'); alertKey = ''; renderDash(); }; });
+  document.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-a'); alertKey = alertKey === k ? '' : k; renderDash(); }; });
+  document.querySelectorAll('.person').forEach(function (b) { b.onclick = function () { loadPerson(b.getAttribute('data-id')); }; });
+}
+function tile(l, n, d) { return '<div class="tile"><div class="l">' + l + '</div><div class="v">' + n + '<span> / ' + d + '</span></div></div>'; }
+function alertBtn(k, t, n, s, color) { return '<button type="button" class="alert' + (alertKey === k ? ' on' : '') + '" data-a="' + k + '"><i style="background:' + color + '"></i><span><b>' + t + ' · ' + n + ' 位</b><small>' + s + '</small></span></button>'; }
+function match(r, k) { return k === 'all' ? true : k === 'todo' ? ['要加強', '待補證據', '待確認方向'].indexOf(r.verdict) >= 0 : r.track === k; }
+
+/* ---------- 個人頁 ---------- */
+var MARK = { can: '✓', hint: '◐', practice: '○', wait: '┄' }, STXT = { can: '獨立', hint: '提示後', practice: '練習中', wait: '待觀察' };
+function loadPerson(id) { loading(); get('person', '&id=' + encodeURIComponent(id)).then(renderPerson).catch(err); }
+function renderPerson(p) {
+  var h = '<button type="button" class="back" id="back">← 回到總覽</button>';
+  h += '<div><div class="small muted">' + esc([p.track, p.level, p.status].filter(String).join(' · ')) + ' · ' + esc(p.id) + '</div><h1>' + esc(p.name) + '</h1><div>' +
+    (p.typeText ? '<span class="tag dark">' + esc(p.typeText) + '</span>' : '<span class="tag">尚未確認方向</span>') + p.comps.map(function (c) { return '<span class="tag">' + esc(c.code + ' ' + c.name) + '</span>'; }).join('') + '</div></div>';
+  h += '<div class="two"><div>';
+  h += '<div class="card"><h2>關鍵動作</h2><div class="small muted" style="margin:-6px 0 6px">✓ 獨立 · ◐ 提示後 · ○ 練習中 · ┄ 待觀察（只算已核對）</div>' + (p.comps.length ? '' : '<div class="muted">確認方向後才會出現</div>');
+  p.comps.forEach(function (c) {
+    h += '<div style="font-size:13px;color:var(--gold);font-weight:700;margin-top:8px">' + esc(c.code + ' ' + c.name) + '</div>';
+    c.items.forEach(function (x) { h += '<div class="it"><span class="mk">' + MARK[x.status] + '</span><span style="flex:1">' + esc(x.text) + (x.isNew ? ' <span class="badge b-up">新進步</span>' : '') + '</span><span class="small muted">' + (x.date ? esc(x.date) + ' ' : '') + STXT[x.status] + '</span></div>'; });
+  });
+  h += '</div><div class="card"><h2>第 ' + p.round + ' 輪任務</h2>' + (p.tasks.length ? '' : '<div class="muted">還沒有任務</div>');
+  p.tasks.forEach(function (t) { h += '<div class="it"><span class="mk" style="width:48px">第' + esc(t.week) + '週</span><span style="flex:1">' + (t.title ? esc(t.title) : '<span class="muted">尚未撰寫</span>') + '<span class="small muted" style="display:block">' + esc(t.range) + (t.published ? ' · 已發布' : ' · 未發布') + (t.report ? ' · ' + esc(t.report) : '') + '</span></span></div>'; });
+  h += '</div><div class="card"><h2>回報紀錄</h2>' + (p.reports.length ? '' : '<div class="muted">還沒有回報</div>');
+  p.reports.forEach(function (r) { h += '<div class="it" style="display:block"><b>第 ' + esc(r.week) + ' 週 · ' + esc(r.status) + '</b> · ' + esc(r.count) + ' 位' + (r.stuck ? ' · 卡點：' + esc(r.stuck) : '') + '<div class="small muted">' + esc(r.time) + ' · 截圖 ' + r.shots + ' 張 · ' + esc(r.check) + '</div>' + (r.note ? '<div class="quote">' + esc(r.note) + '</div>' : '') + '</div>'; });
+  h += '</div></div><div>';
+  h += '<div class="card"><h2>本輪成果</h2>' + (p.results.length ? '' : '<div class="muted">確認方向後才會出現</div>');
+  p.results.forEach(function (r) { var pct = r.target ? Math.min(100, Math.round(r.done / r.target * 100)) : 0; h += '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>' + esc(r.label) + '</span><b>' + r.done + (r.unit || '') + ' / ' + r.target + (r.unit || '') + '</b></div><div class="bar"><i style="width:' + pct + '%"></i></div>' + (r.doug ? '<div class="small muted" style="margin-top:4px">道格建議（不影響評分）：' + esc(r.doug) + '</div>' : '') + '</div>'; });
+  h += '<div class="small muted">訂單只代表公司端進貨</div></div>';
+  h += '<div class="card"><h2>最近回饋</h2>' + (p.feedback.length ? '' : '<div class="muted">還沒有回饋</div>');
+  p.feedback.forEach(function (f) { h += '<div class="it" style="display:block"><div class="small muted">' + esc(f.date) + '</div><div>做得好：' + esc(f.good) + '</div><div>下週只改一件：' + esc(f.next) + '</div></div>'; });
+  h += '</div><div class="card"><h2>初次盤點</h2>' + (p.diag.story ? '<b>' + esc(p.diag.situation) + '</b><div class="quote">' + esc(p.diag.story) + '</div><div class="small muted" style="margin-top:6px">每週可投入：' + esc(p.diag.hours || '未填') + ' · 想達到：' + esc(p.diag.goal || '未填') + '</div>' : '<div class="muted">還沒填</div>') + '</div>';
+  h += '</div></div>';
+  show(h);
+  $('back').onclick = function () { if (D) renderDash(); else loadDash(); window.scrollTo(0, 0); };
+}
+
+/* ---------- 待核准 ---------- */
+function loadQueue() { loading(); get('queue').then(renderQueue).catch(err); }
+function renderQueue(r) {
+  setQ(r.items.length);
+  var h = '<div style="display:flex;gap:10px;align-items:center"><h1 style="flex:1">待核准 ' + r.items.length + ' 筆</h1><span class="small muted">排隊中 ' + r.queued + '</span></div>';
+  if (!r.hasKey) h += '<div class="warnbox">還沒設定 AI 金鑰：到試算表選單「設定 AI 金鑰」</div>';
+  if (r.queued) h += '<button type="button" class="btn2" id="run">立即產生草稿（排隊中 ' + r.queued + ' 筆）</button>';
+  if (!r.items.length) h += '<div class="card empty">目前沒有待核准的項目</div>';
+  r.items.forEach(function (it) { h += '<button type="button" class="qi" data-id="' + esc(it.id) + '"><span class="ty' + (it.status === '失敗' ? ' fail' : '') + '">' + esc(it.status === '失敗' ? '失敗' : it.type) + '</span><span style="flex:1"><b>' + esc(it.name) + '</b><span class="small muted" style="display:block">' + esc(it.type) + ' · ' + esc(it.created) + '</span></span><span class="muted">›</span></button>'; });
+  show(h);
+  document.querySelectorAll('.qi').forEach(function (b) { b.onclick = function () { openItem(b.getAttribute('data-id')); }; });
+  if ($('run')) $('run').onclick = function () { this.disabled = true; this.textContent = '產生中，每筆約 20–40 秒…'; post({ fn: 'run' }).then(function (x) { toast('新產生 ' + x.data.done + ' 筆'); loadQueue(); }).catch(function (e) { toast(e.message); loadQueue(); }); };
+}
+function openItem(id) { loading(); get('item', '&id=' + encodeURIComponent(id)).then(function (it) { cur = it; renderItem(); }).catch(err); }
+function backQ() { return '<button type="button" class="back" id="backq">← 待核准清單</button>'; }
+function renderItem() {
+  var it = cur, h = backQ();
+  h += '<div><div class="small muted">' + esc(it.member.track) + (it.member.typeText ? ' · ' + esc(it.member.typeText) : '') + '</div><h1>' + esc(it.member.name) + '｜' + esc(it.type) + '</h1></div>';
+  if (it.status === '失敗') { h += '<div class="warnbox">草稿產生失敗：' + esc(it.note) + '</div>' + regenBox(); show(h); bindItem(); return; }
+  if (it.type === '方向') h += viewDir(it); else if (it.type === '任務') h += viewTask(it); else h += viewRep(it);
+  h += regenBox();
+  show(h); bindItem();
+}
+function regenBox() { return '<div class="card"><label for="regen" style="margin-top:0">重新產生時要 AI 注意什麼？（選填）</label><textarea id="regen" placeholder="例如：他主要面對面銷售，改成門市情境"></textarea><div style="margin-top:10px"><button type="button" class="btn2" id="regenBtn">重新產生</button></div></div>'; }
+function sel(id, list, val) { return '<select id="' + id + '">' + list.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>'; }
+function viewDir(it) {
+  var d = it.draft, c = it.ctx, dir = it.member.track === '董事';
+  var comps = it.comps.map(function (x) { return [x.code, x.code + ' ' + x.name]; });
+  var h = '<div class="card"><h2>經銷商填的</h2><b>' + esc(c.situation) + '</b><div class="quote">' + esc(c.story) + '</div><div class="small muted" style="margin-top:6px">每週可投入：' + esc(c.hours || '未填') + ' · 想達到：' + esc(c.goal || '未填') + '</div></div>';
+  h += '<div class="card"><h2>AI 整理</h2><div class="muted">' + esc(d.reason) + '</div><div style="margin-top:8px"><b>看到的動作</b>' + (d.seen || []).map(function (s) { return '<div class="it"><span class="mk">✓</span><span>' + esc(s.code) + '「' + esc(s.quote) + '」</span></div>'; }).join('') + '<b style="display:block;margin-top:8px">缺少的動作</b>' + (d.missing || []).map(function (s) { return '<div class="it"><span class="mk" style="color:var(--red)">✕</span><span>' + esc(s.code) + '：' + esc(s.why) + '</span></div>'; }).join('') + '</div></div>';
+  h += '<div class="card"><h2>你的確認</h2><label for="type" style="margin-top:0">改善方向</label>' + sel('type', dir ? [['董事', '董事：讓團隊不靠我也能運作']] : [['T1', 'T1 銷售溝通'], ['T2', 'T2 有效邀約'], ['T3', 'T3 會員經營'], ['T4', 'T4 小組帶領']], d.type);
+  h += '<label for="c1">教學職能 1</label>' + sel('c1', comps, d.comp1) + '<label for="b1">暫定基準</label><input type="text" id="b1" value="' + esc(d.baseline1) + '">';
+  h += '<label for="c2">教學職能 2</label>' + sel('c2', comps, d.comp2) + '<label for="b2">暫定基準</label><input type="text" id="b2" value="' + esc(d.baseline2) + '">';
+  h += '<label for="reason">理由</label><textarea id="reason">' + esc(d.reason) + '</textarea><div style="margin-top:12px"><button type="button" class="btn" id="approve">核准，並產生第 1 週任務草稿</button></div></div>';
+  return h;
+}
+function viewTask(it) {
+  var d = it.draft, c = it.ctx;
+  var h = '<div class="card"><h2>第 ' + c.round + ' 輪第 ' + c.week + ' 週 · ' + esc(c.range) + '</h2>' + c.actions.map(function (a) { return '<div class="small muted">' + esc(a.code + ' ' + a.comp + '：' + a.text) + '</div>'; }).join('') + '<div class="small" style="margin-top:8px;color:var(--gold)">AI 的安排：' + esc(d.why) + '</div></div>';
+  h += '<div class="card"><h2>經銷商會看到的（可修改）</h2><label for="title" style="margin-top:0">這週改善</label><input type="text" id="title" value="' + esc(d.title) + '">';
+  for (var i = 0; i < 3; i++) h += '<label for="s' + i + '">步驟 ' + (i + 1) + '</label><textarea id="s' + i + '" style="min-height:56px">' + esc(d.steps[i] || '') + '</textarea>';
+  if (c.week === 1) h += '<label style="font-weight:400;display:flex;gap:8px;align-items:center;min-height:44px"><input type="checkbox" id="today"> 第 1 週從今天開始</label>';
+  h += '<div style="margin-top:8px"><button type="button" class="btn" id="approve">核准並發布</button></div></div>';
+  return h;
+}
+var LEVELS = ['獨立', '提示後', '代做', '未看到', '無法判斷'];
+function viewRep(it) {
+  var d = it.draft, c = it.ctx, h = '';
+  if (d.needMore) h += '<div class="warnbox">AI 認為證據可能不足：' + esc(d.needMoreReason) + '</div>';
+  h += '<div class="card"><h2>第 ' + esc(c.week) + ' 週 · ' + esc(c.task) + '</h2><div><b>' + esc(c.status) + '</b> · ' + esc(c.count) + ' 位' + (c.stuck ? ' · 卡點：' + esc(c.stuck) : '') + '</div>' + (c.note ? '<div class="quote">' + esc(c.note) + '</div>' : '') +
+    '<div class="imgs" style="margin-top:10px">' + (c.images.length ? c.images.map(function (s) { return '<img src="' + s + '" alt="回報截圖">'; }).join('') : '<span class="muted">沒有截圖</span>') + '</div></div>';
+  it.acts = c.actions.map(function (a) { var x = (d.actions || []).filter(function (y) { return y.code === a.code; })[0] || { level: '未看到', evidence: '' }; return { code: a.code, text: a.comp + '：' + a.text, level: x.level, evidence: x.evidence }; });
+  h += '<div class="card"><h2>關鍵動作</h2><div class="small muted" style="margin:-6px 0 4px">紅框「無法判斷」要你選定</div>';
+  it.acts.forEach(function (a, i) {
+    h += '<div class="act"><div class="h"><b>' + esc(a.code) + '</b><span class="small muted" style="flex:1">' + esc(a.text) + '</span></div><div class="lv" role="group" aria-label="' + esc(a.code) + ' 程度">' +
+      LEVELS.map(function (l) { return '<button type="button" data-i="' + i + '" data-l="' + l + '" class="' + (a.level === l ? 'on' : '') + (l === '無法判斷' && a.level === l ? ' warn' : '') + '">' + l + '</button>'; }).join('') +
+      '</div><input type="text" id="ev' + i + '" value="' + esc(a.evidence) + '" aria-label="' + esc(a.code) + ' 證據" style="margin-top:8px"></div>';
+  });
+  h += '</div>';
+  it.incs = d.increments || [];
+  if (it.incs.length) h += '<div class="card"><h2>本輪成果累計</h2>' + it.incs.map(function (x, i) { return '<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><span style="flex:1">' + esc(x.label) + '</span><span>+</span><input type="text" inputmode="numeric" id="inc' + i + '" value="' + esc(x.add) + '" style="width:72px" aria-label="' + esc(x.label) + '"></div>'; }).join('') + '<div class="small muted">訂單、出席請在試算表「成果」更新</div></div>';
+  h += '<div class="card"><h2>給他的回饋</h2><label for="good" style="margin-top:0">做得好的一個地方</label><textarea id="good">' + esc(d.good) + '</textarea><label for="next">下週只改一件</label><textarea id="next">' + esc(d.next) + '</textarea><label for="memo">給下週任務草稿的補充（選填）</label><input type="text" id="memo"><div style="margin-top:12px"><button type="button" class="btn" id="approve">核准並發布回饋</button></div></div>';
+  h += '<div class="card"><label for="why" style="margin-top:0">退回補件的原因（經銷商會看到）</label><input type="text" id="why" value="' + esc(d.needMore ? d.needMoreReason : '') + '" placeholder="例如：請補上客人回覆的那段截圖"><div style="margin-top:10px"><button type="button" class="btn2" id="reject">退回補件</button></div></div>';
+  return h;
+}
+function bindItem() {
+  $('backq').onclick = loadQueue;
+  document.querySelectorAll('.lv button').forEach(function (b) {
+    b.onclick = function () { var i = +b.getAttribute('data-i'); cur.acts[i].evidence = $('ev' + i).value; cur.acts[i].level = b.getAttribute('data-l'); keepAndRender(); };
+  });
+  if ($('approve')) $('approve').onclick = approve;
+  if ($('reject')) $('reject').onclick = reject;
+  $('regenBtn').onclick = function () {
+    var btn = this; btn.disabled = true; btn.textContent = 'AI 重新產生中，約 20–40 秒…';
+    post({ fn: 'regenerate', id: cur.id, note: $('regen').value }).then(function () { openItem(cur.id); }).catch(function (e) { toast(e.message); btn.disabled = false; btn.textContent = '重新產生'; });
+  };
+}
+function keepAndRender() {
+  var keep = {}; ['good', 'next', 'memo', 'why', 'regen'].forEach(function (k) { if ($(k)) keep[k] = $(k).value; });
+  var inc = (cur.incs || []).map(function (x, i) { return $('inc' + i) ? $('inc' + i).value : x.add; });
+  var y = window.scrollY;
+  cur.draft.actions = cur.acts.map(function (a) { return { code: a.code, level: a.level, evidence: a.evidence }; });
+  cur.draft.increments = (cur.incs || []).map(function (x, i) { return { label: x.label, add: inc[i] }; });
+  if (keep.good !== undefined) cur.draft.good = keep.good; if (keep.next !== undefined) cur.draft.next = keep.next;
+  renderItem();
+  if (keep.memo !== undefined && $('memo')) $('memo').value = keep.memo; if (keep.why !== undefined && $('why')) $('why').value = keep.why; if (keep.regen !== undefined) $('regen').value = keep.regen;
+  window.scrollTo(0, y);
+}
+function collect() {
+  var it = cur;
+  if (it.type === '方向') return { type: $('type').value, comp1: $('c1').value, comp2: $('c2').value, baseline1: $('b1').value, baseline2: $('b2').value, reason: $('reason').value, seen: it.draft.seen, missing: it.draft.missing };
+  if (it.type === '任務') return { title: $('title').value, steps: [$('s0').value, $('s1').value, $('s2').value], startToday: $('today') ? $('today').checked : false };
+  return { actions: it.acts.map(function (a, i) { return { code: a.code, level: a.level, evidence: $('ev' + i).value }; }),
+    increments: (it.incs || []).map(function (x, i) { return { label: x.label, add: Number($('inc' + i).value) || 0 }; }),
+    good: $('good').value, next: $('next').value, memo: $('memo').value };
+}
+function approve() {
+  var e = collect();
+  if (cur.type === '回報' && e.actions.some(function (a) { return a.level === '無法判斷'; })) { toast('還有動作是「無法判斷」，請先選定'); return; }
+  var b = $('approve'); b.disabled = true; b.textContent = '寫入中…';
+  post({ fn: 'approve', id: cur.id, edit: e }).then(function () { toast('已核准'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = '再試一次'; });
+}
+function reject() {
+  var why = $('why').value.trim(); if (!why) { toast('請寫退回原因，經銷商會看到'); return; }
+  var b = $('reject'); b.disabled = true; b.textContent = '退回中…';
+  post({ fn: 'reject', id: cur.id, reason: why }).then(function () { toast('已退回補件'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = '退回補件'; });
+}
+
+/* ---------- 週報 ---------- */
+function loadSummary() { loading(); get('summary').then(renderSummary).catch(err); }
+function renderSummary(s) {
+  var h = '<div><h1>本週報告摘要</h1><div class="small muted" style="margin-top:4px">複製後貼到公司的週報；數字以現在的資料計算</div></div>';
+  h += '<button type="button" class="btn" id="copy">複製摘要</button>';
+  h += '<div class="card"><pre id="sum">' + esc(s.text) + '</pre></div>';
+  show(h);
+  $('copy').onclick = function () {
+    var t = s.text, btn = this;
+    var done = function () { btn.textContent = '已複製'; setTimeout(function () { btn.textContent = '複製摘要'; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+    function fallback() { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('請長按文字手動複製'); } a.remove(); }
+  };
+}
+
+if (!KEY) show('<div class="card"><b>需要管理連結</b><p class="muted">請到試算表選單「培育陪跑 → 手機管理頁連結」取得你的專屬網址。</p></div>');
+else route();
+</script>
+</body>
+</html>
