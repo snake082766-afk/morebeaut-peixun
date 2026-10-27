@@ -100,16 +100,26 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
 /* ---------- 資料 ---------- */
 
+/* 先顯示上次的內容，背景同時取得最新資料（只存在這支手機，讀不到就照常等待） */
+var STALE = false;
+function cacheKey() { return 'peixun_card_' + CODE; }
+function saveCache() { try { localStorage.setItem(cacheKey(), JSON.stringify(data)); } catch (e) {} }
+function readCache() { try { return JSON.parse(localStorage.getItem(cacheKey()) || 'null'); } catch (e) { return null; } }
+
 function load() {
   if (DEMO) { data = demoData(); render(); return; }
   if (!CODE) { renderError('連結不完整，請用傳給你的專屬連結開啟。'); return; }
+  var cached = readCache();
+  if (cached && cached.ok) { data = cached; STALE = true; render(); }
   fetch(API + '?u=' + encodeURIComponent(CODE))
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (!d.ok) { renderError(d.error); return; }
-      data = d; render();
+      var wasStale = STALE;
+      data = d; STALE = false; saveCache();
+      if (!wasStale || view === 'main' || data.stage !== 'active') render();
     })
-    .catch(function () { renderError('連線不順，請稍後再開一次。'); });
+    .catch(function () { if (STALE) { STALE = false; toast('連線不順，目前顯示的是上次的內容'); render(); } else renderError('連線不順，請稍後再開一次。'); });
 }
 
 function post(body) {
@@ -136,7 +146,7 @@ function renderError(msg) {
 
 function head() {
   return '<div class="row" style="justify-content:space-between"><div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>' +
-    (data.task ? '<div class="pill">第 ' + data.task.week + ' 週 · ' + esc(data.task.range) + '</div>' : '') + '</div>';
+    (STALE ? '<div class="pill">更新中…</div>' : data.task ? '<div class="pill">第 ' + data.task.week + ' 週 · ' + esc(data.task.range) + '</div>' : '') + '</div>';
 }
 
 function backBtn(to, text) {
@@ -146,7 +156,7 @@ function backBtn(to, text) {
 function viewMain() {
   var d = data, t = d.task, h = '';
   h += head();
-  h += '<div><h1 class="serif" style="font-size:26px;margin:0">' + esc(d.member.name) + '，這週一起練一件事</h1>' + (DEMO ? '<div class="small muted" style="margin-top:4px">示範畫面</div>' : '') + '</div>';
+  h += '<div><h1 class="serif" style="font-size:26px;margin:0">' + (d.member.name ? esc(d.member.name) + '，' : '') + '這週一起練一件事</h1>' + (DEMO ? '<div class="small muted" style="margin-top:4px">示範畫面</div>' : '') + '</div>';
   h += '<div class="dark row" style="gap:14px">' + ICON.target + '<div style="flex:1"><div style="font-size:12px;color:var(--gold2);letter-spacing:1px">你的改善方向</div><div style="font-size:17px;font-weight:700;margin-top:2px">' + esc(d.member.typeText) + '</div></div>' +
     (t ? '<div class="center"><div style="font-size:20px;font-weight:700;color:var(--gold2)">' + t.week + '<span style="font-size:13px;color:var(--line)">/' + t.weeks + '</span></div><div style="font-size:11px;color:var(--line)">週</div></div>' : '') + '</div>';
 
@@ -161,15 +171,19 @@ function viewMain() {
       h += '<div class="row" style="align-items:flex-start;background:var(--redbg);border-radius:18px;padding:16px 18px">' + ICON.chat.replace('#8B6914', '#8A3A22') +
         '<div><div style="font-size:12px;font-weight:700;color:var(--red)">' + esc(COACH()) + '請你補充</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.redo) + '</div></div></div>';
     }
-    h += d.reported
-      ?'<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">這週已回報，' + esc(COACH() + REPLY()) + '</div>'
+    h += STALE
+      ? '<div class="btn" style="background:var(--soft);color:var(--muted)" role="status">更新中…</div>'
+      : d.reported
+      ? '<div class="btn" style="background:var(--soft);color:var(--gold)" role="status">' + (d.reportState === 'checked'
+          ? '這週回報' + esc(COACH()) + '已確認' + (d.feedback && d.feedback.thisWeek ? '，回饋在下方' : '')
+          : '這週已回報，' + esc(COACH() + REPLY())) + '</div>'
       : '<button type="button" class="btn" onclick="go(\'report\')">' + (d.redo ? '補交回報 ' : '回報這週 ') + ICON.arrow + '</button>';
   } else {
     h += '<div class="card"><div class="label">這週任務</div><p style="margin:8px 0 0;line-height:1.7">' + esc(COACH()) + '正在準備你的任務，好了會先在 LINE 跟你說。</p></div>';
   }
 
   if (d.feedback) {
-    h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">' + esc(COACH()) + '給你的回饋 · ' + esc(d.feedback.date) + '</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.feedback.good) + (d.feedback.next ? '這週試試：' + esc(d.feedback.next) : '') + '</div></div></div>';
+    h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">' + esc(COACH()) + (d.feedback.thisWeek ? '這週給你的回饋 · ' : '上次給你的回饋 · ') + esc(d.feedback.date) + '</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.feedback.good) + '</div>' + (d.feedback.next ? '<div style="font-size:14px;line-height:1.7;margin-top:4px"><b>下週試試：</b>' + esc(d.feedback.next) + '</div>' : '') + '</div></div>';
   }
 
   var can = d.growth.items.filter(function (x) { return x.status === 'can'; }).length;
@@ -241,7 +255,7 @@ function bindReport() {
       count: form.status === '卡住了' ? 0 : form.count, note: form.note, stuck: form.stuck, images: form.images })
       .then(function (r) {
         if (!r.ok) throw new Error(r.error);
-        data.reported = true; form = {}; toast('收到了，謝謝你！'); go('main');
+        data.reported = true; data.reportState = 'pending'; saveCache(); form = {}; toast('收到了，謝謝你！'); go('main');
       })
       .catch(function () { btn.disabled = false; btn.textContent = '送出回報'; toast('沒有送出，請再試一次'); });
   };
@@ -369,7 +383,7 @@ function demoData() {
       steps: ['找 2 位雙十買過的客人', '用這句開頭：「這兩週用下來，頭髮有沒有不一樣？」', '聽完先複述一次：「所以你最在意的是……，對嗎？」'],
       evidence: '附對話截圖（可遮名字）' },
     reported: false,
-    feedback: { date: '11/8', good: '你問「主要想改善什麼」問得很好，客人有回答。', next: '多確認一句，讓客人覺得被聽懂。' },
+    feedback: { thisWeek: false, date: '11/8', good: '你問「主要想改善什麼」問得很好，客人有回答。', next: '多確認一句，讓客人覺得被聽懂。' },
     growth: {
       date: '11/13', next: '客人回得很短時換個問法',
       items: [

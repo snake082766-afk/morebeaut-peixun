@@ -116,10 +116,20 @@ function setQ(n) { var el = $('qn'); el.hidden = !n; el.textContent = n || ''; }
 
 /* ---------- 總覽 ---------- */
 var BADGE = { '進步': 'b-up', '要加強': 'b-fix', '待補證據': 'b-wait', '待確認方向': 'b-wait', '照進度': 'b-ok', '暫緩': 'b-ok' };
-function loadDash() { loading(); get('dash').then(function (d) { D = d; setQ(d.queue); $('meta').textContent = '第 ' + d.round + ' 輪 · ' + d.stamp; renderDash(); }).catch(err); }
+function loadDash() {
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem('peixun_admin_dash') || 'null'); } catch (e) {}
+  if (!D && cached) D = cached;
+  if (D) { setQ(D.queue); $('meta').textContent = '更新中…'; renderDash(); } else loading();
+  get('dash').then(function (d) {
+    D = d; setQ(d.queue); $('meta').textContent = '第 ' + d.round + ' 輪 · ' + d.stamp;
+    try { localStorage.setItem('peixun_admin_dash', JSON.stringify(d)); } catch (e) {}
+    if (tab === 'dash' && !document.getElementById('back')) renderDash();
+  }).catch(function (e) { if (D) { $('meta').textContent = '連線不順，顯示上次內容'; } else err(e); });
+}
 function renderDash() {
   var c = D.c, ok = D.rows.length - c.todo;
-  var h = '<div><h1>本週要處理 ' + c.todo + ' 位，' + ok + ' 位照進度走</h1><div class="small muted" style="margin-top:4px">只計已核對的紀錄；未回報者留在分母</div></div>';
+  var h = '<div><h1>本週要協助 ' + c.todo + ' 位，' + ok + ' 位照進度走</h1><div class="small muted" style="margin-top:4px">另有待核准 ' + c.qWait + ' 筆、等待產生草稿 ' + c.qQueued + ' 筆' + (c.qQueued && !D.autoOn ? '（自動草稿未啟用）' : '') + '；只計已核對的紀錄</div></div>';
   h += '<div class="tiles">' + tile('已初次盤點', c.diagnosed, c.members) + tile('已派任務', c.assigned, c.members) + tile('本週已回報', c.reported, c.dueNow) + tile('證據已核對', c.verified, c.reported) + tile('有進步', c.improved, c.compared) + '</div>';
   h += alertBtn('miss', '連續 2 項任務未完成', c.miss2, '先問卡點，把任務縮成一個動作', 'var(--red)');
   h += alertBtn('pending', '證據待補超過 1 週', c.pendingP, '提醒補截圖，未補前不打勾', 'var(--blue)');
@@ -169,7 +179,7 @@ function renderPerson(p) {
   h += '</div><div class="card"><h2>第 ' + p.round + ' 輪任務</h2>' + (p.tasks.length ? '' : '<div class="muted">還沒有任務</div>');
   p.tasks.forEach(function (t) { h += '<div class="it"><span class="mk" style="width:48px">第' + esc(t.week) + '週</span><span style="flex:1">' + (t.title ? esc(t.title) : '<span class="muted">尚未撰寫</span>') + '<span class="small muted" style="display:block">' + esc(t.range) + (t.published ? ' · 已發布' : ' · 未發布') + (t.report ? ' · ' + esc(t.report) : '') + '</span></span></div>'; });
   h += '</div><div class="card"><h2>回報紀錄</h2>' + (p.reports.length ? '' : '<div class="muted">還沒有回報</div>');
-  p.reports.forEach(function (r) { h += '<div class="it" style="display:block"><b>第 ' + esc(r.week) + ' 週 · ' + esc(r.status) + '</b> · ' + esc(r.count) + ' 位' + (r.stuck ? ' · 卡點：' + esc(r.stuck) : '') + '<div class="small muted">' + esc(r.time) + ' · 截圖 ' + r.shots + ' 張 · ' + esc(r.check) + '</div>' + (r.note ? '<div class="quote">' + esc(r.note) + '</div>' : '') + '</div>'; });
+  p.reports.forEach(function (r) { h += '<div class="it" style="display:block"><b>第 ' + esc(r.week) + ' 週 · ' + esc(r.status) + '</b> · ' + esc(r.count) + ' 位' + (r.stuck ? ' · 卡點：' + esc(r.stuck) : '') + '<div class="small muted">' + esc(r.time) + ' · ' + esc(r.check) + '</div>' + (r.links && r.links.length ? '<div style="margin-top:4px">' + r.links.map(function (u, i) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener" style="display:inline-block;min-height:36px;line-height:36px;margin-right:12px;color:var(--gold)">開啟截圖 ' + (i + 1) + '</a>'; }).join('') + '</div>' : (r.shots ? '' : '<div class="small muted">沒有截圖</div>')) + (r.note ? '<div class="quote">' + esc(r.note) + '</div>' : '') + '</div>'; });
   h += '</div></div><div>';
   h += '<div class="card"><h2>本輪成果</h2>' + (p.results.length ? '' : '<div class="muted">確認方向後才會出現</div>');
   p.results.forEach(function (r) { var pct = r.target ? Math.min(100, Math.round(r.done / r.target * 100)) : 0; h += '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>' + esc(r.label) + '</span><b>' + r.done + (r.unit || '') + ' / ' + r.target + (r.unit || '') + '</b></div><div class="bar"><i style="width:' + pct + '%"></i></div>' + (r.doug ? '<div class="small muted" style="margin-top:4px">道格建議（不影響評分）：' + esc(r.doug) + '</div>' : '') + '</div>'; });
@@ -188,7 +198,7 @@ function renderQueue(r) {
   setQ(r.items.length);
   var h = '<div style="display:flex;gap:10px;align-items:center"><h1 style="flex:1">待核准 ' + r.items.length + ' 筆</h1><span class="small muted">排隊中 ' + r.queued + '</span></div>';
   if (!r.hasKey) h += '<div class="warnbox">還沒設定 AI 金鑰：到試算表選單「設定 AI 金鑰」</div>';
-  if (r.queued) h += '<button type="button" class="btn2" id="run">立即產生草稿（排隊中 ' + r.queued + ' 筆）</button>';
+  if (r.queued) h += (r.autoOn ? '<div class="small muted">排隊中的會在 10 分鐘內自動產生草稿</div>' : '<div class="warnbox">自動草稿未啟用，排隊中的不會自己產生。可以按下方按鈕，或到試算表啟用自動草稿。</div>') + '<button type="button" class="btn2" id="run">立即產生草稿（排隊中 ' + r.queued + ' 筆）</button>';
   if (!r.items.length) h += '<div class="card empty">目前沒有待核准的項目</div>';
   r.items.forEach(function (it) { h += '<button type="button" class="qi" data-id="' + esc(it.id) + '"><span class="ty' + (it.status === '失敗' ? ' fail' : '') + '">' + esc(it.status === '失敗' ? '失敗' : it.type) + '</span><span style="flex:1"><b>' + esc(it.name) + '</b><span class="small muted" style="display:block">' + esc(it.type) + ' · ' + esc(it.created) + '</span></span><span class="muted">›</span></button>'; });
   show(h);
