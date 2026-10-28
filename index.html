@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2C1E08">
-<title>茉本｜培育陪跑</title>
+<title>茉本｜經銷商成長陪跑</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
 <style>
@@ -145,7 +145,7 @@ function renderError(msg) {
 }
 
 function head() {
-  return '<div class="row" style="justify-content:space-between"><div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>' +
+  return '<div class="row" style="justify-content:space-between"><div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜經銷商成長陪跑</div>' +
     (STALE ? '<div class="pill">更新中…</div>' : data.task ? '<div class="pill">第 ' + data.task.week + ' 週 · ' + esc(data.task.range) + '</div>' : '') + '</div>';
 }
 
@@ -332,7 +332,7 @@ function viewDiagnosis() {
     ? ['夥伴有，但大多不動', '我會做，但帶不動人', '團隊很依賴我，我一停就停', '其他']
     : ['邀得到人，但對方不會買', '有接觸的人，但邀不到場', '有會員，但他們不動', '自己會做，但帶不動夥伴', '其他'];
   if (form.situation === undefined) form = { situation: '', story: '', hours: '', goal: '' };
-  var h = '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>';
+  var h = '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜經銷商成長陪跑</div>';
   h += '<div><h1 class="serif" style="font-size:24px;margin:0">' + esc(data.member.name) + '，先聊聊你現在的狀況</h1><p class="muted" style="font-size:14px;line-height:1.7;margin:8px 0 0">大約 5 分鐘。沒有對錯，越接近真實越好，' + esc(COACH()) + '會依這份幫你找出最值得先練的一件事。</p></div>';
   h += '<div><div style="font-size:15px;font-weight:700;margin-bottom:8px">1. 哪一個最像你現在的情況？</div><div role="radiogroup" aria-label="最像的情況" style="display:flex;flex-direction:column;gap:8px">';
   sits.forEach(function (s) {
@@ -367,7 +367,7 @@ function bindDiagnosis() {
 }
 
 function viewWaiting() {
-  return '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜培育陪跑</div>' +
+  return '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜經銷商成長陪跑</div>' +
     '<div class="card center" style="margin-top:24px;padding:28px 20px">' + ICON.check.replace(/14/g, '40') +
     '<div class="serif" style="font-size:22px;margin-top:12px">收到了，謝謝你</div><p class="muted" style="line-height:1.8;margin:10px 0 0">' + esc(COACH()) + '會看過你寫的內容，跟你確認這次要練的方向。<br>任務準備好後，打開這個連結就看得到。</p></div>';
 }
