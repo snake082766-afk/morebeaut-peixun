@@ -220,7 +220,16 @@ function renderPerson(p) {
 }
 
 /* ---------- 待核准 ---------- */
-function loadQueue() { loading(); get('queue').then(renderQueue).catch(err); }
+function dropQ(id) { try { var c = JSON.parse(localStorage.getItem('peixun_admin_q') || 'null'); if (c) { c.items = c.items.filter(function (x) { return x.id !== id; }); localStorage.setItem('peixun_admin_q', JSON.stringify(c)); } } catch (e) {} }
+function loadQueue() {
+  var c = null; try { c = JSON.parse(localStorage.getItem('peixun_admin_q') || 'null'); } catch (e) {}
+  if (c) { renderQueue(c); $('meta').textContent = '更新中…'; } else loading();
+  get('queue').then(function (r) {
+    try { localStorage.setItem('peixun_admin_q', JSON.stringify(r)); } catch (e) {}
+    $('meta').textContent = '';
+    if (tab === 'queue' && !document.getElementById('backq')) renderQueue(r);
+  }).catch(function (e) { if (c) $('meta').textContent = '連線不順，顯示上次內容'; else err(e); });
+}
 function renderQueue(r) {
   setQ(r.items.length);
   var h = '<div style="display:flex;gap:10px;align-items:center"><h1 style="flex:1">待核准 ' + r.items.length + ' 筆</h1><span class="small muted">排隊中 ' + r.queued + '</span></div>';
@@ -230,7 +239,7 @@ function renderQueue(r) {
   r.items.forEach(function (it) { h += '<button type="button" class="qi" data-id="' + esc(it.id) + '"><span class="ty' + (it.status === '失敗' ? ' fail' : '') + '">' + esc(it.status === '失敗' ? '失敗' : it.type) + '</span><span style="flex:1"><b>' + esc(it.name) + '</b><span class="small muted" style="display:block">' + esc(it.type) + ' · ' + esc(it.created) + '</span></span><span class="muted">›</span></button>'; });
   show(h);
   document.querySelectorAll('.qi').forEach(function (b) { b.onclick = function () { openItem(b.getAttribute('data-id')); }; });
-  if ($('run')) $('run').onclick = function () { this.disabled = true; this.textContent = '產生中，每筆約 20–40 秒…'; post({ fn: 'run' }).then(function (x) { toast('新產生 ' + x.data.done + ' 筆'); loadQueue(); }).catch(function (e) { toast(e.message); loadQueue(); }); };
+  if ($('run')) $('run').onclick = function () { this.disabled = true; this.textContent = '產生中，每筆約 20–40 秒…'; post({ fn: 'run' }).then(function (x) { toast(x.data.busy ? '自動草稿正在產生中，過幾分鐘下拉重新整理' : '新產生 ' + x.data.done + ' 筆'); loadQueue(); }).catch(function (e) { toast(e.message); loadQueue(); }); };
 }
 function openItem(id) { loading(); get('item', '&id=' + encodeURIComponent(id)).then(function (it) { cur = it; renderItem(); }).catch(err); }
 function backQ() { return '<button type="button" class="back" id="backq">← 待核准清單</button>'; }
@@ -320,12 +329,12 @@ function approve() {
   var e = collect();
   if (cur.type === '回報' && e.actions.some(function (a) { return a.level === '無法判斷'; })) { toast('還有動作是「無法判斷」，請先選定'); return; }
   var b = $('approve'); b.disabled = true; b.textContent = '寫入中…';
-  post({ fn: 'approve', id: cur.id, edit: e }).then(function () { toast('已核准'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = '再試一次'; });
+  post({ fn: 'approve', id: cur.id, edit: e }).then(function () { toast('已核准'); dropQ(cur.id); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = '再試一次'; });
 }
 function reject() {
   var why = $('why').value.trim(); if (!why) { toast('請寫退回原因，經銷商會看到'); return; }
   var b = $('reject'), label = b.textContent; b.disabled = true; b.textContent = '送出中…';
-  post({ fn: 'reject', id: cur.id, reason: why }).then(function () { toast(cur.type === '方向' ? '已請他補充，他打開連結就會看到' : '已退回補件'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = label; });
+  post({ fn: 'reject', id: cur.id, reason: why }).then(function () { dropQ(cur.id); toast(cur.type === '方向' ? '已請他補充，他打開連結就會看到' : '已退回補件'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = label; });
 }
 
 /* ---------- 週報 ---------- */
