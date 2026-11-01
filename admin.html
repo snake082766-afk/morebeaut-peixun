@@ -57,6 +57,8 @@ button:disabled{opacity:.5}
 label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
 input[type=text],textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:var(--ink)}
 textarea{min-height:72px;resize:vertical;line-height:1.6}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:var(--ink);text-align:left}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
 .qi{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
 .qi .ty{flex:none;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--soft);color:#6B4F0A}
 .qi .ty.fail{background:var(--redbg);color:var(--red)}
@@ -365,7 +367,7 @@ function loadMeets() { loading(); get('meets').then(renderMeets).catch(err); }
 function renderMeets(r) {
   var today = new Date(), iso = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
   var h = '<div><h1>研討會出席</h1><div class="small muted" style="margin-top:4px">會前建立：寫好重點、這週行動和口令。會後大家用口令自己簽到，不用點名</div></div>';
-  h += '<div class="card"><h2>新增一場</h2><label for="mname" style="margin-top:0">名稱</label><input type="text" id="mname" placeholder="例如：第 1 週線上研討會"><label for="mdate">日期</label><input type="date" id="mdate" value="' + iso + '" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff">' +
+  h += '<div class="card"><h2>新增一場</h2><label for="mname" style="margin-top:0">名稱</label><input type="text" id="mname" placeholder="例如：第 1 週線上研討會"><label for="mdate">日期</label><input type="date" id="mdate" value="' + iso + '">' +
     '<label for="mpoints">這場重點（經銷商會看到，缺席的人也能補看）</label><textarea id="mpoints" placeholder="例如：客人說「考慮一下」時，先問一句「你最在意的是哪一點？」"></textarea>' +
     '<label for="maction">這週行動（會後要大家做的一件事）</label><input type="text" id="maction" placeholder="例如：找 1 位說過考慮的客人，用今天的問法再聊一次">' +
     '<label for="mcode">簽到口令（會議最後公布）</label><input type="text" id="mcode" placeholder="例如：需求">' +
