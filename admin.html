@@ -347,6 +347,7 @@ function copyText(t, btn) {
 }
 function renderSummary(s) {
   var h = '<div><h1>本週報告摘要</h1><div class="small muted" style="margin-top:4px">複製後貼到公司的週報；數字以現在的資料計算</div></div>';
+  if (s.gaps) h += '<div class="card"><h2>這週共同卡點（研討會選題參考）</h2><pre>' + esc(s.gaps.text) + '</pre></div>';
   h += '<button type="button" class="btn" id="copy">複製摘要</button>';
   h += '<div class="card"><pre id="sum">' + esc(s.text) + '</pre></div>';
   if (s.teams && s.teams.length) {
@@ -363,23 +364,34 @@ var MEET = null;
 function loadMeets() { loading(); get('meets').then(renderMeets).catch(err); }
 function renderMeets(r) {
   var today = new Date(), iso = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
-  var h = '<div><h1>研討會出席</h1><div class="small muted" style="margin-top:4px">每場會先把參與中的人都列為缺席，再勾選出席的人</div></div>';
-  h += '<div class="card"><h2>新增一場</h2><label for="mname" style="margin-top:0">名稱</label><input type="text" id="mname" placeholder="例如：第 1 週線上研討會"><label for="mdate">日期</label><input type="date" id="mdate" value="' + iso + '" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff"><div style="margin-top:12px"><button type="button" class="btn" id="mnew">新增並開始點名</button></div></div>';
+  var h = '<div><h1>研討會出席</h1><div class="small muted" style="margin-top:4px">會前建立：寫好重點、這週行動和口令。會後大家用口令自己簽到，不用點名</div></div>';
+  h += '<div class="card"><h2>新增一場</h2><label for="mname" style="margin-top:0">名稱</label><input type="text" id="mname" placeholder="例如：第 1 週線上研討會"><label for="mdate">日期</label><input type="date" id="mdate" value="' + iso + '" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff">' +
+    '<label for="mpoints">這場重點（經銷商會看到，缺席的人也能補看）</label><textarea id="mpoints" placeholder="例如：客人說「考慮一下」時，先問一句「你最在意的是哪一點？」"></textarea>' +
+    '<label for="maction">這週行動（會後要大家做的一件事）</label><input type="text" id="maction" placeholder="例如：找 1 位說過考慮的客人，用今天的問法再聊一次">' +
+    '<label for="mcode">簽到口令（會議最後公布）</label><input type="text" id="mcode" placeholder="例如：需求">' +
+    '<div class="small muted" style="margin-top:6px">經銷商在研討會當天，用自己的連結輸入口令＋寫一句心得，就會自動記為出席。不填口令就改用手動點名。</div>' +
+    '<div style="margin-top:12px"><button type="button" class="btn" id="mnew">建立這場研討會</button></div></div>';
   if (!r.items.length) h += '<div class="card empty">還沒有研討會紀錄</div>';
   r.items.forEach(function (m) { h += '<button type="button" class="qi" data-m="' + esc(m.id) + '"><span class="ty">' + esc(m.date) + '</span><span style="flex:1"><b>' + esc(m.name) + '</b><span class="small muted" style="display:block">出席 ' + m.present + ' / ' + m.total + '</span></span><span class="muted">›</span></button>'; });
   show(h);
   $('mnew').onclick = function () {
     var name = $('mname').value.trim(); if (!name) { toast('請填研討會名稱'); return; }
     var b = this; b.disabled = true; b.textContent = '建立中…';
-    post({ fn: 'meetNew', date: $('mdate').value, name: name }).then(function (x) { openMeet(x.data.id); }).catch(function (e) { toast(e.message); b.disabled = false; b.textContent = '新增並開始點名'; });
+    post({ fn: 'meetNew', date: $('mdate').value, name: name, points: $('mpoints').value, action: $('maction').value, code: $('mcode').value }).then(function (x) { toast('已建立'); openMeet(x.data.id); }).catch(function (e) { toast(e.message); b.disabled = false; b.textContent = '建立這場研討會'; });
   };
   document.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { openMeet(b.getAttribute('data-m')); }; });
 }
 function openMeet(id) { loading(); get('meet', '&id=' + encodeURIComponent(id)).then(function (m) { MEET = m; renderMeet(); }).catch(err); }
 function renderMeet() {
   var m = MEET, n = m.people.filter(function (p) { return p.present; }).length;
-  var h = '<button type="button" class="back" id="mback">← 研討會列表</button><div><h1>' + esc(m.name) + '</h1><div class="small muted">' + esc(m.date) + ' · 點名字切換出席／缺席，最後按儲存</div></div>';
-  h += '<div class="tiles"><div class="tile" style="cursor:default"><div class="l">出席</div><div class="v">' + n + '<span> / ' + m.people.length + '</span></div></div></div>';
+  var h = '<button type="button" class="back" id="mback">← 研討會列表</button><div><h1>' + esc(m.name) + '</h1><div class="small muted">' + esc(m.date) + ' · 有口令的話大家會自己簽到；要補登，點名字切換後按儲存</div></div>';
+  var selfN = m.people.filter(function (p) { return p.present && p.self; }).length;
+  h += '<div class="tiles"><div class="tile" style="cursor:default"><div class="l">出席</div><div class="v">' + n + '<span> / ' + m.people.length + '</span></div><div class="go">口令簽到 ' + selfN + ' 位</div></div></div>';
+  h += '<details class="card"' + (m.points || m.action || m.code ? '' : ' open') + '><summary style="font-weight:700;cursor:pointer;min-height:32px">重點、這週行動與口令</summary>' +
+    '<label for="ep">這場重點</label><textarea id="ep">' + esc(m.points) + '</textarea><label for="ea">這週行動</label><input type="text" id="ea" value="' + esc(m.action) + '"><label for="ec">簽到口令</label><input type="text" id="ec" value="' + esc(m.code) + '">' +
+    '<div style="margin-top:10px"><button type="button" class="btn2" id="esave">儲存這三項</button></div></details>';
+  var notes = m.people.filter(function (p) { return p.present && p.note; });
+  if (notes.length) h += '<div class="card"><h2>大家帶走的一件事（' + notes.length + '）</h2>' + notes.map(function (p) { return '<div class="it" style="display:block"><b>' + esc(p.name) + '</b><div class="small" style="line-height:1.6;margin-top:2px">' + esc(p.note) + '</div></div>'; }).join('') + '</div>';
   var teams = []; m.people.forEach(function (p) { var t = p.team || '未分團隊'; if (teams.indexOf(t) < 0) teams.push(t); });
   teams.forEach(function (t) {
     var ps = m.people.filter(function (p) { return (p.team || '未分團隊') === t; });
@@ -390,6 +402,10 @@ function renderMeet() {
   h += '<div style="position:sticky;bottom:12px;margin-top:8px"><button type="button" class="btn" id="msave">儲存點名（出席 ' + n + ' 位）</button></div>';
   var y = window.scrollY; show(h); window.scrollTo(0, y);
   $('mback').onclick = loadMeets;
+  $('esave').onclick = function () {
+    var b = this; MEET.points = $('ep').value; MEET.action = $('ea').value; MEET.code = $('ec').value; b.disabled = true; b.textContent = '儲存中…';
+    post({ fn: 'meetEdit', id: m.id, points: MEET.points, action: MEET.action, code: MEET.code }).then(function () { toast('已儲存'); b.disabled = false; b.textContent = '儲存這三項'; }).catch(function (e) { toast(e.message); b.disabled = false; b.textContent = '再試一次'; });
+  };
   document.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { var p = MEET.people[+b.getAttribute('data-p')]; p.present = !p.present; renderMeet(); }; });
   $('msave').onclick = function () {
     var b = this; b.disabled = true; b.textContent = '儲存中…';

@@ -139,6 +139,23 @@ function render() {
   if (view === 'growth') { app.innerHTML = viewGrowth(); return; }
   if (view === 'compare' && data.compare) { app.innerHTML = viewCompare(); return; }
   app.innerHTML = viewMain();
+  bindMeets();
+}
+
+function bindMeets() {
+  document.querySelectorAll('[data-ck]').forEach(function (b) {
+    b.onclick = function () {
+      var id = b.getAttribute('data-ck'), code = $('ck' + id).value.trim(), note = $('cn' + id).value.trim();
+      if (!code) { toast('先輸入口令'); return; }
+      if (note.length < 4) { toast('寫一句這場你要帶走的一件事'); return; }
+      b.disabled = true; b.textContent = '簽到中…';
+      post({ action: 'checkin', id: id, code: code, note: note }).then(function (r) {
+        if (!r.ok) throw new Error(r.error);
+        (data.meets || []).forEach(function (m) { if (m.id === id) { m.present = true; m.canCheck = false; m.note = note; } });
+        saveCache(); toast('簽到完成，謝謝你！'); render();
+      }).catch(function (e) { b.disabled = false; b.textContent = '簽到'; toast(e.message || '沒有送出，請再試一次'); });
+    };
+  });
 }
 
 function renderError(msg) {
@@ -186,6 +203,19 @@ function viewMain() {
   if (d.feedback) {
     h += '<div class="soft row" style="align-items:flex-start">' + ICON.chat + '<div><div class="label" style="font-size:12px">' + esc(COACH()) + (d.feedback.thisWeek ? '這週給你的回饋 · ' : '上次給你的回饋 · ') + esc(d.feedback.date) + '</div><div style="font-size:14px;line-height:1.7;margin-top:4px">' + esc(d.feedback.good) + '</div>' + (d.feedback.next ? '<div style="font-size:14px;line-height:1.7;margin-top:4px"><b>下週試試：</b>' + esc(d.feedback.next) + '</div>' : '') + '</div></div>';
   }
+
+  (d.meets || []).forEach(function (m) {
+    h += '<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="gap:8px;justify-content:space-between"><div class="label">研討會 · ' + esc(m.date) + '</div>' +
+      (m.present ? '<span class="small" style="color:var(--gold);font-weight:700">已簽到 ✓</span>' : m.future ? '<span class="small muted">即將舉行</span>' : m.today ? '' : '<span class="small muted">可補看重點</span>') + '</div>' +
+      '<div class="serif" style="font-size:18px;line-height:1.4">' + esc(m.name) + '</div>';
+    if (m.points) h += '<div style="font-size:14px;line-height:1.7;white-space:pre-wrap">' + esc(m.points) + '</div>';
+    if (m.action) h += '<div style="background:var(--soft);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.6"><b>這週行動：</b>' + esc(m.action) + '</div>';
+    if (m.present && m.note) h += '<div class="small muted">你帶走的：' + esc(m.note) + '</div>';
+    if (m.canCheck && !STALE) h += '<div style="border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px"><label for="ck' + esc(m.id) + '" style="font-size:14px;font-weight:700">輸入會議中公布的口令</label><input type="text" id="ck' + esc(m.id) + '" autocomplete="off">' +
+      '<label for="cn' + esc(m.id) + '" style="font-size:14px;font-weight:700">這場你要帶走的一件事</label><textarea id="cn' + esc(m.id) + '" rows="2" placeholder="一句話就好"></textarea>' +
+      '<button type="button" class="btn" data-ck="' + esc(m.id) + '">簽到</button></div>';
+    h += '</div>';
+  });
 
   var can = d.growth.items.filter(function (x) { return x.status === 'can'; }).length;
   h += '<button type="button" class="btn2" onclick="go(\'growth\')"><span class="row" style="gap:8px">' + ICON.up + '看我的成長卡</span><span class="small" style="color:var(--gold)">' + can + ' 項已做到</span></button>';
