@@ -29,7 +29,7 @@ h2{font-size:16px;margin:0 0 10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);text-align:left;cursor:pointer;width:100%}.tile.on{border:2px solid var(--ink)}.tile .go{font-size:11px;color:var(--muted)}
-.sec{margin:14px 2px 6px;font-weight:700}.sec small{font-weight:500;color:var(--muted);margin-left:6px}
+.sec{margin:14px 2px 6px;font-weight:700;scroll-margin-top:110px}.sec small{font-weight:500;color:var(--muted);margin-left:6px}
 .tile .l{font-size:12px;color:var(--muted)}.tile .v{font-size:24px;font-weight:700;margin-top:2px}.tile .v span{font-size:13px;color:var(--muted);font-weight:500}
 .alert{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
 .alert.on{border:2px solid var(--ink)}
@@ -180,7 +180,7 @@ function personBtn(r) {
 var COPYNO = '';
 function bindDash() {
   if ($('copyNo')) $('copyNo').onclick = function () { copyText(COPYNO, this); };
-  document.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-t'); tileKey = tileKey === k ? '' : k; alertKey = ''; renderDash(); }; });
+  document.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-t'); tileKey = tileKey === k ? '' : k; alertKey = ''; renderDash(); var sec = document.querySelector('.sec'); if (tileKey && sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }; });
   document.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { filter = b.getAttribute('data-f'); alertKey = ''; if (filter.indexOf('team:') !== 0 && filter !== 'all') tileKey = ''; renderDash(); }; });
   document.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-a'); alertKey = alertKey === k ? '' : k; tileKey = ''; renderDash(); }; });
   document.querySelectorAll('.person').forEach(function (b) { b.onclick = function () { loadPerson(b.getAttribute('data-id')); }; });
