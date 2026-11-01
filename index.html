@@ -116,6 +116,7 @@ function load() {
     .then(function (d) {
       if (!d.ok) { renderError(d.error); return; }
       var wasStale = STALE;
+      if (d.stage === 'diagnosis' && d.ask && form.more === undefined) form = {};
       data = d; STALE = false; saveCache();
       if (!wasStale || view === 'main' || data.stage !== 'active') render();
     })
@@ -331,16 +332,21 @@ function viewDiagnosis() {
   var sits = dir
     ? ['夥伴有，但大多不動', '我會做，但帶不動人', '團隊很依賴我，我一停就停', '其他']
     : ['邀得到人，但對方不會買', '有接觸的人，但邀不到場', '有會員，但他們不動', '自己會做，但帶不動夥伴', '其他'];
-  if (form.situation === undefined) form = { situation: '', story: '', hours: '', goal: '' };
+  if (form.situation === undefined) form = data.prev ? { situation: data.prev.situation, story: data.prev.story, hours: data.prev.hours, goal: data.prev.goal, more: '' } : { situation: '', story: '', hours: '', goal: '' };
   var h = '<div style="font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700">茉本｜經銷商成長陪跑</div>';
   h += '<div><h1 class="serif" style="font-size:24px;margin:0">' + esc(data.member.name) + '，先聊聊你現在的狀況</h1><p class="muted" style="font-size:14px;line-height:1.7;margin:8px 0 0">大約 5 分鐘。沒有對錯，越接近真實越好，' + esc(COACH()) + '會依這份幫你找出最值得先練的一件事。</p></div>';
+  if (data.ask) {
+    h += '<div class="card" style="border:2px solid var(--red)"><div style="font-size:12px;font-weight:700;color:var(--red)">' + esc(COACH()) + '想多了解一點</div><div style="font-size:15px;line-height:1.7;margin-top:4px">' + esc(data.ask) + '</div>' +
+      '<label for="more" style="display:block;font-size:14px;font-weight:700;margin:12px 0 6px">你的補充</label><textarea id="more" rows="4" placeholder="一兩句話就好，也可以描述當時的對話">' + esc(form.more || '') + '</textarea>' +
+      '<div class="muted" style="font-size:12px;margin-top:6px">下面是你上次填的內容，需要的話也可以一起修改</div></div>';
+  }
   h += '<div><div style="font-size:15px;font-weight:700;margin-bottom:8px">1. 哪一個最像你現在的情況？</div><div role="radiogroup" aria-label="最像的情況" style="display:flex;flex-direction:column;gap:8px">';
   sits.forEach(function (s) {
     var on = form.situation === s;
     h += '<button type="button" role="radio" aria-checked="' + on + '" class="opt' + (on ? ' on' : '') + '" data-sit="' + s + '" style="min-height:52px"><span style="flex:1"><b style="font-size:15px;font-weight:500">' + s + '</b></span></button>';
   });
   h += '</div></div>';
-  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="story" style="font-size:15px;font-weight:700">2. ' + (dir ? '最近一次你帶夥伴做一件事：你怎麼做、他後來有自己做嗎？' : '最近 14 天的一位客人：你說了什麼、對方怎麼回、結果如何？') + '</label><textarea id="story" rows="5" placeholder="照實寫就好，可以不寫名字">' + esc(form.story) + '</textarea></div>';
+  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="story" style="font-size:15px;font-weight:700">2. ' + (dir ? '最近一次你帶夥伴做一件事：你怎麼做、他後來有自己做嗎？' : '最近 14 天的一位客人：你說了什麼、對方怎麼回、結果如何？') + '</label><textarea id="story" rows="5" placeholder="' + (dir ? '例如：我請 A 夥伴這週約 2 位客人，先陪他打第一通，後來他自己約了 1 位，另一位說沒空就沒再追。' : '例如：A 小姐用完洗髮精，我問「用起來怎麼樣？」她說「還可以，但有點乾」，我推薦護髮素，她說再想想，後來沒下單。') + '">' + esc(form.story) + '</textarea></div>';
   h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="hours" style="font-size:15px;font-weight:700">3. 每週大概能投入多少時間？</label><input type="text" id="hours" placeholder="例如：5 小時，多在晚上" value="' + esc(form.hours) + '"></div>';
   h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="goal" style="font-size:15px;font-weight:700">4. 接下來最想達到什麼？</label><input type="text" id="goal" placeholder="例如：淡季也能每月穩定有客人回購" value="' + esc(form.goal) + '"></div>';
   h += '<button type="button" class="btn" id="sendDiag">送出</button>';
@@ -348,19 +354,20 @@ function viewDiagnosis() {
 }
 
 function bindDiagnosis() {
-  var keep = function () { form.story = $('story').value; form.hours = $('hours').value; form.goal = $('goal').value; };
+  var keep = function () { form.story = $('story').value; form.hours = $('hours').value; form.goal = $('goal').value; if ($('more')) form.more = $('more').value; };
   document.querySelectorAll('[data-sit]').forEach(function (b) {
     b.onclick = function () { keep(); form.situation = b.dataset.sit; render(); };
   });
   $('sendDiag').onclick = function () {
     keep();
     if (!form.situation) { toast('先選一個最像你的情況'); return; }
+    if (data.ask && (form.more || '').trim().length < 4) { toast('先在最上面寫下你的補充'); return; }
     if (form.story.trim().length < 15) { toast('第 2 題再多寫一點，越具體越好'); return; }
     var btn = $('sendDiag'); btn.disabled = true; btn.textContent = '送出中…';
-    post({ action: 'diagnosis', situation: form.situation, story: form.story, hours: form.hours, goal: form.goal })
+    post({ action: 'diagnosis', situation: form.situation, story: form.story, hours: form.hours, goal: form.goal, more: form.more || '' })
       .then(function (r) {
         if (!r.ok) throw new Error(r.error);
-        data.stage = 'waiting'; form = {}; render();
+        data.stage = 'waiting'; data.ask = ''; data.prev = null; form = {}; render();
       })
       .catch(function () { btn.disabled = false; btn.textContent = '送出'; toast('沒有送出，請再試一次'); });
   };

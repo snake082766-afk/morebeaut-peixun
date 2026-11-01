@@ -28,7 +28,8 @@ h2{font-size:16px;margin:0 0 10px}
 .muted{color:var(--muted)}.small{font-size:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);text-align:left;cursor:pointer;width:100%}.tile.on{border:2px solid var(--ink)}.tile .go{font-size:11px;color:var(--muted)}
+.sec{margin:14px 2px 6px;font-weight:700}.sec small{font-weight:500;color:var(--muted);margin-left:6px}
 .tile .l{font-size:12px;color:var(--muted)}.tile .v{font-size:24px;font-weight:700;margin-top:2px}.tile .v span{font-size:13px;color:var(--muted);font-weight:500}
 .alert{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;color:var(--ink);cursor:pointer}
 .alert.on{border:2px solid var(--ink)}
@@ -79,6 +80,7 @@ pre{white-space:pre-wrap;word-break:break-word;font:inherit;font-size:14px;line-
   <nav class="tabs" aria-label="分頁">
     <button type="button" class="tab on" data-tab="dash">總覽</button>
     <button type="button" class="tab" data-tab="queue">待核准<span class="n" id="qn" hidden></span></button>
+    <button type="button" class="tab" data-tab="meet">研討會</button>
     <button type="button" class="tab" data-tab="summary">週報</button>
   </nav>
 </div>
@@ -90,7 +92,8 @@ var API = 'https://script.google.com/macros/s/AKfycbxzJQgf9zouBQEHfme6B__etQj1A1
 
 var KEY = new URLSearchParams(location.search).get('k') || '';
 try { if (KEY) localStorage.setItem('peixun_admin', KEY); else KEY = localStorage.getItem('peixun_admin') || ''; } catch (e) {}
-var tab = 'dash', D = null, filter = 'todo', alertKey = '', cur = null;
+var tab = 'dash', D = null, filter = 'todo', alertKey = '', tileKey = '', cur = null;
+var TILES = { d: ['已初次盤點', '已填', '還沒填', null], a: ['已派任務', '已派', '還沒派', null], r: ['本週已回報', '已回報', '還沒回報', 'due'], v: ['證據已核對', '已核對', '待核對', 'r'], i: ['有進步', '有進步', '還沒有新進步', 'c'] };
 
 function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -111,11 +114,11 @@ function post(body) {
 document.querySelectorAll('.tab').forEach(function (b) {
   b.onclick = function () { tab = b.getAttribute('data-tab'); document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('on', x === b); }); route(); };
 });
-function route() { if (tab === 'dash') loadDash(); else if (tab === 'queue') loadQueue(); else loadSummary(); }
+function route() { if (tab === 'dash') loadDash(); else if (tab === 'queue') loadQueue(); else if (tab === 'meet') loadMeets(); else loadSummary(); }
 function setQ(n) { var el = $('qn'); el.hidden = !n; el.textContent = n || ''; }
 
 /* ---------- 總覽 ---------- */
-var BADGE = { '進步': 'b-up', '要加強': 'b-fix', '待補證據': 'b-wait', '待確認方向': 'b-wait', '照進度': 'b-ok', '暫緩': 'b-ok' };
+var BADGE = { '進步': 'b-up', '要加強': 'b-fix', '待補證據': 'b-wait', '待確認方向': 'b-wait', '待補充': 'b-wait', '照進度': 'b-ok', '暫緩': 'b-ok' };
 function loadDash() {
   var cached = null;
   try { cached = JSON.parse(localStorage.getItem('peixun_admin_dash') || 'null'); } catch (e) {}
@@ -129,39 +132,62 @@ function loadDash() {
 }
 function renderDash() {
   var c = D.c, ok = D.rows.length - c.todo;
-  var h = '<div><h1>本週要協助 ' + c.todo + ' 位，' + ok + ' 位照進度走</h1><div class="small muted" style="margin-top:4px">另有待核准 ' + c.qWait + ' 筆、等待產生草稿 ' + c.qQueued + ' 筆' + (c.qQueued && !D.autoOn ? '（自動草稿未啟用）' : '') + '；只計已核對的紀錄</div></div>';
-  h += '<div class="tiles">' + tile('已初次盤點', c.diagnosed, c.members) + tile('已派任務', c.assigned, c.members) + tile('本週已回報', c.reported, c.dueNow) + tile('證據已核對', c.verified, c.reported) + tile('有進步', c.improved, c.compared) + '</div>';
+  var h = '<div><h1>本週要協助 ' + c.todo + ' 位，' + ok + ' 位照進度走</h1><div class="small muted" style="margin-top:4px">另有待核准 ' + c.qWait + ' 筆、等待產生草稿 ' + c.qQueued + ' 筆' + (c.qQueued && !D.autoOn ? '（自動草稿未啟用）' : '') + '；只計已核對的紀錄' + (D.out && D.out.length ? '<br>不參與 ' + D.out.length + ' 位（不列入統計）：' + esc(D.out.map(function (o) { return o.name; }).join('、')) : '') + '</div></div>';
+  h += '<div class="tiles">' + tile('d', c.diagnosed, c.members) + tile('a', c.assigned, c.members) + tile('r', c.reported, c.dueNow) + tile('v', c.verified, c.reported) + tile('i', c.improved, c.compared) + '</div>';
   h += alertBtn('miss', '連續 2 項任務未完成', c.miss2, '先問卡點，把任務縮成一個動作', 'var(--red)');
   h += alertBtn('pending', '證據待補超過 1 週', c.pendingP, '提醒補截圖，未補前不打勾', 'var(--blue)');
   h += alertBtn('hint', '同一動作 2 次仍需提示', c.hint2, '看一次真實案例，示範後重做', 'var(--gold)');
+  if (c.meetCount) h += alertBtn('meet', '研討會有缺席', c.meetMiss || 0, '確認原因；依規則需要時回報執行長', 'var(--muted)');
   var fs = [['todo', '需要我處理'], ['all', '全部'], ['董事', '董事'], ['35位', '35位']];
   if (D.rows.some(function (r) { return r.track === '擴大梯次'; })) fs.push(['擴大梯次', '擴大梯次']);
+  ['TOP', 'THE ONE', 'PRINCESSES', 'RICH'].forEach(function (t) { if (D.rows.some(function (r) { return r.team === t; })) fs.push(['team:' + t, t]); });
   h += '<div class="chips" role="group" aria-label="篩選">' + fs.map(function (f) { return '<button type="button" class="chip' + (filter === f[0] && !alertKey ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + ' ' + D.rows.filter(function (r) { return match(r, f[0]); }).length + '</button>'; }).join('') + '</div>';
   var rows = D.rows.filter(function (r) {
     if (alertKey === 'miss') return r.miss >= 2 && !r.paused;
     if (alertKey === 'pending') return r.pending > 0 && !r.paused;
     if (alertKey === 'hint') return r.hintTwice > 0 && !r.paused;
+    if (alertKey === 'meet') return r.meetMiss > 0 && !r.paused;
     return match(r, filter);
   });
-  if (!D.rows.length) h += '<div class="card empty">名單還是空的</div>';
+  var T = tileKey && TILES[tileKey];
+  if (T && D.rows[0] && !D.rows[0].f) { T = null; tileKey = ''; }
+  if (T) {
+    var teamK = filter.indexOf('team:') === 0 ? filter : '';
+    var base = D.rows.filter(function (r) { return (!T[3] || r.f[T[3]]) && (!teamK || match(r, teamK)); });
+    var yes = base.filter(function (r) { return r.f[tileKey]; }), no = base.filter(function (r) { return !r.f[tileKey]; });
+    h += '<div class="sec">' + (teamK ? esc(teamK.slice(5)) + '｜' : '') + T[2] + ' ' + no.length + ' 位<small>點同一格可收起</small></div>';
+    if (no.length) { COPYNO = no.map(function (r) { return r.name; }).join('、'); h += '<button type="button" class="btn2" id="copyNo">複製這 ' + no.length + ' 位的名字</button>'; }
+    h += no.length ? no.map(personBtn).join('') : '<div class="card empty">沒有</div>';
+    h += '<div class="sec">' + T[1] + ' ' + yes.length + ' 位</div>';
+    h += yes.length ? yes.map(personBtn).join('') : '<div class="card empty">還沒有</div>';
+    rows = [];
+  }
+  else if (!D.rows.length) h += '<div class="card empty">名單還是空的</div>';
   else if (!rows.length) h += '<div class="card empty">這個篩選沒有人</div>';
-  rows.forEach(function (r) {
-    h += '<button type="button" class="person" data-id="' + esc(r.id) + '"><span class="main"><span class="nm">' + esc(r.name) + '</span> <span class="small muted">' + esc(r.track) + '</span>' +
+  rows.forEach(function (r) { h += personBtn(r); });
+  show(h);
+  bindDash();
+}
+function personBtn(r) {
+    return '<button type="button" class="person" data-id="' + esc(r.id) + '"><span class="main"><span class="nm">' + esc(r.name) + '</span> <span class="small muted">' + esc(r.track) + '</span>' +
       '<span class="sub" style="display:block">' + esc(r.typeText || '尚未確認方向') + '</span>' +
       '<span class="sub" style="display:block">' + (r.week ? '第 ' + r.week + ' 週 · ' : '') + esc(r.thisRep) + (r.miss ? ' · 連續未完成 ' + r.miss : '') + '</span>' +
       '<span class="sub" style="display:block">' + esc(r.latest) + (r.newOnes ? ' · 新進步 ' + r.newOnes : '') + '</span>' +
       (r.result ? '<span class="sub" style="display:block">' + esc(r.result) + '</span>' : '') +
       (r.next && r.next !== '—' ? '<span class="sub" style="display:block;color:var(--gold)">→ ' + esc(r.next) + '</span>' : '') +
       '</span><span class="badge ' + (BADGE[r.verdict] || 'b-ok') + '">' + esc(r.verdict) + '</span></button>';
-  });
-  show(h);
-  document.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { filter = b.getAttribute('data-f'); alertKey = ''; renderDash(); }; });
-  document.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-a'); alertKey = alertKey === k ? '' : k; renderDash(); }; });
+}
+var COPYNO = '';
+function bindDash() {
+  if ($('copyNo')) $('copyNo').onclick = function () { copyText(COPYNO, this); };
+  document.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-t'); tileKey = tileKey === k ? '' : k; alertKey = ''; renderDash(); }; });
+  document.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { filter = b.getAttribute('data-f'); alertKey = ''; if (filter.indexOf('team:') !== 0 && filter !== 'all') tileKey = ''; renderDash(); }; });
+  document.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-a'); alertKey = alertKey === k ? '' : k; tileKey = ''; renderDash(); }; });
   document.querySelectorAll('.person').forEach(function (b) { b.onclick = function () { loadPerson(b.getAttribute('data-id')); }; });
 }
-function tile(l, n, d) { return '<div class="tile"><div class="l">' + l + '</div><div class="v">' + n + '<span> / ' + d + '</span></div></div>'; }
+function tile(k, n, d) { return '<button type="button" class="tile' + (tileKey === k ? ' on' : '') + '" data-t="' + k + '" aria-pressed="' + (tileKey === k) + '"><div class="l">' + TILES[k][0] + '</div><div class="v">' + n + '<span> / ' + d + '</span></div><div class="go">' + (tileKey === k ? '收起 ▴' : '看名單 ▾') + '</div></button>'; }
 function alertBtn(k, t, n, s, color) { return '<button type="button" class="alert' + (alertKey === k ? ' on' : '') + '" data-a="' + k + '"><i style="background:' + color + '"></i><span><b>' + t + ' · ' + n + ' 位</b><small>' + s + '</small></span></button>'; }
-function match(r, k) { return k === 'all' ? true : k === 'todo' ? ['要加強', '待補證據', '待確認方向'].indexOf(r.verdict) >= 0 : r.track === k; }
+function match(r, k) { return k === 'all' ? true : k.indexOf('team:') === 0 ? r.team === k.slice(5) : k === 'todo' ? ['要加強', '待補證據', '待確認方向', '待補充'].indexOf(r.verdict) >= 0 : r.track === k; }
 
 /* ---------- 個人頁 ---------- */
 var MARK = { can: '✓', hint: '◐', practice: '○', wait: '┄' }, STXT = { can: '獨立', hint: '提示後', practice: '練習中', wait: '待觀察' };
@@ -186,6 +212,7 @@ function renderPerson(p) {
   h += '<div class="small muted">訂單只代表公司端進貨</div></div>';
   h += '<div class="card"><h2>最近回饋</h2>' + (p.feedback.length ? '' : '<div class="muted">還沒有回饋</div>');
   p.feedback.forEach(function (f) { h += '<div class="it" style="display:block"><div class="small muted">' + esc(f.date) + '</div><div>做得好：' + esc(f.good) + '</div><div>下週只改一件：' + esc(f.next) + '</div></div>'; });
+  if (p.meets && p.meets.length) h += '</div><div class="card"><h2>研討會出席 ' + p.meets.filter(function (m) { return m.present; }).length + '/' + p.meets.length + '</h2>' + p.meets.map(function (m) { return '<div class="it"><span class="mk" style="color:' + (m.present ? 'var(--gold)' : 'var(--red)') + '">' + (m.present ? '✓' : '✗') + '</span><span style="flex:1">' + esc(m.name) + '</span><span class="small muted">' + esc(m.date) + ' ' + (m.present ? '出席' : '缺席') + '</span></div>'; }).join('');
   h += '</div><div class="card"><h2>初次盤點</h2>' + (p.diag.story ? '<b>' + esc(p.diag.situation) + '</b><div class="quote">' + esc(p.diag.story) + '</div><div class="small muted" style="margin-top:6px">每週可投入：' + esc(p.diag.hours || '未填') + ' · 想達到：' + esc(p.diag.goal || '未填') + '</div>' : '<div class="muted">還沒填</div>') + '</div>';
   h += '</div></div>';
   show(h);
@@ -226,6 +253,7 @@ function viewDir(it) {
   h += '<label for="c1">教學職能 1</label>' + sel('c1', comps, d.comp1) + '<label for="b1">暫定基準</label><input type="text" id="b1" value="' + esc(d.baseline1) + '">';
   h += '<label for="c2">教學職能 2</label>' + sel('c2', comps, d.comp2) + '<label for="b2">暫定基準</label><input type="text" id="b2" value="' + esc(d.baseline2) + '">';
   h += '<label for="reason">理由</label><textarea id="reason">' + esc(d.reason) + '</textarea><div style="margin-top:12px"><button type="button" class="btn" id="approve">核准，並產生第 1 週任務草稿</button></div></div>';
+  h += '<div class="card">' + (d.followUp ? '<div class="warnbox" style="margin-bottom:8px">AI 覺得細節不夠，建議追問</div>' : '') + '<label for="why" style="margin-top:0">細節不夠？請他補充（經銷商打開連結會看到這段）</label><textarea id="why" style="min-height:64px" placeholder="例如：你說客人沒反應，你當時傳的第一句話是什麼？">' + esc(d.followUp || '') + '</textarea><div style="margin-top:10px"><button type="button" class="btn2" id="reject">請他補充</button></div></div>';
   return h;
 }
 function viewTask(it) {
@@ -296,22 +324,68 @@ function approve() {
 }
 function reject() {
   var why = $('why').value.trim(); if (!why) { toast('請寫退回原因，經銷商會看到'); return; }
-  var b = $('reject'); b.disabled = true; b.textContent = '退回中…';
-  post({ fn: 'reject', id: cur.id, reason: why }).then(function () { toast('已退回補件'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = '退回補件'; });
+  var b = $('reject'), label = b.textContent; b.disabled = true; b.textContent = '送出中…';
+  post({ fn: 'reject', id: cur.id, reason: why }).then(function () { toast(cur.type === '方向' ? '已請他補充，他打開連結就會看到' : '已退回補件'); loadQueue(); }).catch(function (x) { toast(x.message); b.disabled = false; b.textContent = label; });
 }
 
 /* ---------- 週報 ---------- */
 function loadSummary() { loading(); get('summary').then(renderSummary).catch(err); }
+function copyText(t, btn) {
+  var label = btn.textContent;
+  var done = function () { btn.textContent = '已複製'; setTimeout(function () { btn.textContent = label; }, 2000); };
+  function fallback() { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('請長按文字手動複製'); } a.remove(); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+}
 function renderSummary(s) {
   var h = '<div><h1>本週報告摘要</h1><div class="small muted" style="margin-top:4px">複製後貼到公司的週報；數字以現在的資料計算</div></div>';
   h += '<button type="button" class="btn" id="copy">複製摘要</button>';
   h += '<div class="card"><pre id="sum">' + esc(s.text) + '</pre></div>';
+  if (s.teams && s.teams.length) {
+    h += '<div><h1 style="font-size:19px">給團隊長的進度</h1><div class="small muted" style="margin-top:4px">只有完成狀況，不含任何回報內容；複製後傳給各團隊長</div></div>';
+    s.teams.forEach(function (t, i) { h += '<div class="card"><pre>' + esc(t.text) + '</pre><div style="margin-top:10px"><button type="button" class="btn2" data-team="' + i + '">複製 ' + esc(t.team) + '</button></div></div>'; });
+  } else h += '<div class="card muted">名單填上「團隊」後，這裡會出現給各團隊長的進度。</div>';
   show(h);
-  $('copy').onclick = function () {
-    var t = s.text, btn = this;
-    var done = function () { btn.textContent = '已複製'; setTimeout(function () { btn.textContent = '複製摘要'; }, 2000); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
-    function fallback() { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('請長按文字手動複製'); } a.remove(); }
+  $('copy').onclick = function () { copyText(s.text, this); };
+  document.querySelectorAll('[data-team]').forEach(function (b) { b.onclick = function () { copyText(s.teams[+b.getAttribute('data-team')].text, b); }; });
+}
+
+/* ---------- 研討會 ---------- */
+var MEET = null;
+function loadMeets() { loading(); get('meets').then(renderMeets).catch(err); }
+function renderMeets(r) {
+  var today = new Date(), iso = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
+  var h = '<div><h1>研討會出席</h1><div class="small muted" style="margin-top:4px">每場會先把參與中的人都列為缺席，再勾選出席的人</div></div>';
+  h += '<div class="card"><h2>新增一場</h2><label for="mname" style="margin-top:0">名稱</label><input type="text" id="mname" placeholder="例如：第 1 週線上研討會"><label for="mdate">日期</label><input type="date" id="mdate" value="' + iso + '" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff"><div style="margin-top:12px"><button type="button" class="btn" id="mnew">新增並開始點名</button></div></div>';
+  if (!r.items.length) h += '<div class="card empty">還沒有研討會紀錄</div>';
+  r.items.forEach(function (m) { h += '<button type="button" class="qi" data-m="' + esc(m.id) + '"><span class="ty">' + esc(m.date) + '</span><span style="flex:1"><b>' + esc(m.name) + '</b><span class="small muted" style="display:block">出席 ' + m.present + ' / ' + m.total + '</span></span><span class="muted">›</span></button>'; });
+  show(h);
+  $('mnew').onclick = function () {
+    var name = $('mname').value.trim(); if (!name) { toast('請填研討會名稱'); return; }
+    var b = this; b.disabled = true; b.textContent = '建立中…';
+    post({ fn: 'meetNew', date: $('mdate').value, name: name }).then(function (x) { openMeet(x.data.id); }).catch(function (e) { toast(e.message); b.disabled = false; b.textContent = '新增並開始點名'; });
+  };
+  document.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { openMeet(b.getAttribute('data-m')); }; });
+}
+function openMeet(id) { loading(); get('meet', '&id=' + encodeURIComponent(id)).then(function (m) { MEET = m; renderMeet(); }).catch(err); }
+function renderMeet() {
+  var m = MEET, n = m.people.filter(function (p) { return p.present; }).length;
+  var h = '<button type="button" class="back" id="mback">← 研討會列表</button><div><h1>' + esc(m.name) + '</h1><div class="small muted">' + esc(m.date) + ' · 點名字切換出席／缺席，最後按儲存</div></div>';
+  h += '<div class="tiles"><div class="tile" style="cursor:default"><div class="l">出席</div><div class="v">' + n + '<span> / ' + m.people.length + '</span></div></div></div>';
+  var teams = []; m.people.forEach(function (p) { var t = p.team || '未分團隊'; if (teams.indexOf(t) < 0) teams.push(t); });
+  teams.forEach(function (t) {
+    var ps = m.people.filter(function (p) { return (p.team || '未分團隊') === t; });
+    h += '<div class="sec">' + esc(t) + '<small>' + ps.filter(function (p) { return p.present; }).length + ' / ' + ps.length + '</small></div><div class="lv" style="margin-top:0">';
+    ps.forEach(function (p) { var i = m.people.indexOf(p); h += '<button type="button" data-p="' + i + '" class="' + (p.present ? 'on' : '') + '" aria-pressed="' + p.present + '" style="min-height:44px">' + (p.present ? '✓ ' : '') + esc(p.name) + '</button>'; });
+    h += '</div>';
+  });
+  h += '<div style="position:sticky;bottom:12px;margin-top:8px"><button type="button" class="btn" id="msave">儲存點名（出席 ' + n + ' 位）</button></div>';
+  var y = window.scrollY; show(h); window.scrollTo(0, y);
+  $('mback').onclick = loadMeets;
+  document.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { var p = MEET.people[+b.getAttribute('data-p')]; p.present = !p.present; renderMeet(); }; });
+  $('msave').onclick = function () {
+    var b = this; b.disabled = true; b.textContent = '儲存中…';
+    post({ fn: 'meetSave', id: m.id, present: m.people.filter(function (p) { return p.present; }).map(function (p) { return p.id; }) })
+      .then(function () { toast('已儲存點名'); loadMeets(); }).catch(function (e) { toast(e.message); b.disabled = false; b.textContent = '再試一次'; });
   };
 }
 
