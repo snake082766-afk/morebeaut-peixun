@@ -110,7 +110,12 @@ function readCache() { try { return JSON.parse(localStorage.getItem(cacheKey()) 
 
 function load() {
   if (DEMO) { data = demoData(); render(); return; }
-  if (!CODE) { renderError('第一次使用，請先用心蘋傳給你的專屬連結打開一次，之後就能從官方 LINE 選單直接進來。'); return; }
+  if (!CODE) {
+    $('app').innerHTML = '<div class="card center" style="margin-top:40px;display:flex;flex-direction:column;gap:12px"><div class="serif" style="font-size:20px">第一次使用，先開一次專屬連結</div>' +
+      '<p class="muted" style="margin:0;line-height:1.8">回到官方 LINE 聊天室，往上找心蘋私訊給你的「專屬連結」點開一次，之後按下方選單的「我的陪跑卡」就能直接進來。</p>' +
+      '<a class="btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center" href="https://line.me/R/oaMessage/%40768iwkya/?' + encodeURIComponent('我找不到我的專屬連結，可以再傳一次給我嗎？') + '">找不到連結？請心蘋再傳一次</a></div>';
+    return;
+  }
   var cached = readCache();
   if (cached && cached.ok) { data = cached; STALE = true; render(); }
   fetch(API + '?u=' + encodeURIComponent(CODE))
