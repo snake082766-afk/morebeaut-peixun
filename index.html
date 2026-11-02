@@ -388,7 +388,15 @@ function viewDiagnosis() {
     h += '<button type="button" role="radio" aria-checked="' + on + '" class="opt' + (on ? ' on' : '') + '" data-sit="' + s + '" style="min-height:52px"><span style="flex:1"><b style="font-size:15px;font-weight:500">' + s + '</b></span></button>';
   });
   h += '</div></div>';
-  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="story" style="font-size:15px;font-weight:700">2. ' + (dir ? '最近一次你帶夥伴做一件事：你怎麼做、他後來有自己做嗎？' : '最近 14 天的一位客人：你說了什麼、對方怎麼回、結果如何？') + '</label><textarea id="story" rows="5" placeholder="' + (dir ? '例如：我請 A 夥伴這週約 2 位客人，先陪他打第一通，後來他自己約了 1 位，另一位說沒空就沒再追。' : '例如：A 小姐用完洗髮精，我問「用起來怎麼樣？」她說「還可以，但有點乾」，我推薦護髮素，她說再想想，後來沒下單。') + '">' + esc(form.story) + '</textarea></div>';
+  var partner = dir || form.situation === '自己會做，但帶不動夥伴';
+  var member = !dir && form.situation === '有會員，但他們不動';
+  var q2 = partner ? '最近一次你帶夥伴做一件事：你怎麼跟他說、他怎麼回、後來他有自己做嗎？'
+    : member ? '最近一位會員：你怎麼跟他互動、他怎麼回、後來他有沒有行動？'
+    : '最近 14 天的一位客人：你說了什麼、對方怎麼回、結果如何？';
+  var ex = partner ? '例如：我請 A 夥伴這週約 2 位客人，先陪他打第一通，後來他自己約了 1 位，另一位說沒空就沒再追。'
+    : member ? '例如：我在群組提醒 B 會員活動最後一天，她回「好喔」，但最後沒有下單，我也沒有再問她原因。'
+    : '例如：A 小姐用完洗髮精，我問「用起來怎麼樣？」她說「還可以，但有點乾」，我推薦護髮素，她說再想想，後來沒下單。';
+  h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="story" style="font-size:15px;font-weight:700">2. ' + q2 + '</label>' + (partner && !dir ? '<div class="small muted" style="margin-top:-2px">你選了「帶不動夥伴」，所以這題請寫一位夥伴的例子，不是客人</div>' : '') + '<textarea id="story" rows="5" placeholder="' + ex + '">' + esc(form.story) + '</textarea></div>';
   h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="hours" style="font-size:15px;font-weight:700">3. 每週大概能投入多少時間？</label><input type="text" id="hours" placeholder="例如：5 小時，多在晚上" value="' + esc(form.hours) + '"></div>';
   h += '<div style="display:flex;flex-direction:column;gap:6px"><label for="goal" style="font-size:15px;font-weight:700">4. 接下來最想達到什麼？</label><input type="text" id="goal" placeholder="例如：淡季也能每月穩定有客人回購" value="' + esc(form.goal) + '"></div>';
   h += '<button type="button" class="btn" id="sendDiag">送出</button>';
@@ -424,16 +432,19 @@ function askBtn(topic) {
   return '<a class="btn2" style="text-decoration:none" href="' + askUrl('我是' + nm + '，' + topic) + '" target="_blank" rel="noopener"><span class="row" style="gap:8px">' + ICON.chat + '有問題？問' + esc(COACH()) + '</span>' + ICON.arrow + '</a>';
 }
 var PROF = { who: ['舊客回購為主', '新客開發為主', '帶夥伴、團隊為主', '自用為主、剛開始經營'], channel: ['LINE 一對一私訊', 'LINE 群組或社群', '面對面、門市', '都有'], size: ['5 位以內', '6–20 位', '21–50 位', '50 位以上'] };
+var PROF_DIR = { who: ['1–2 位', '3–5 位', '6–10 位', '10 位以上'], channel: ['每週固定開會或對焦', '私訊個別追蹤', '有活動才聯絡', '還沒有固定方式'], size: ['照常運作', '少數人會動', '大多會停下來'] };
 var prof = { who: '', channel: '', size: '', good: '', want: '' };
 function viewProfileCard() {
+  var dirP = data.member && data.member.track === '董事', P = dirP ? PROF_DIR : PROF;
   var q = function (k, label) {
     return '<div><div style="font-size:14px;font-weight:700;margin-bottom:6px">' + label + '</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
-      PROF[k].map(function (o) { return '<button type="button" class="chip' + (prof[k] === o ? ' on' : '') + '" data-pk="' + k + '" data-pv="' + o + '" aria-pressed="' + (prof[k] === o) + '">' + o + '</button>'; }).join('') + '</div></div>';
+      P[k].map(function (o) { return '<button type="button" class="chip' + (prof[k] === o ? ' on' : '') + '" data-pk="' + k + '" data-pv="' + o + '" aria-pressed="' + (prof[k] === o) + '">' + o + '</button>'; }).join('') + '</div></div>';
   };
   return '<div class="card" id="profCard" style="display:flex;flex-direction:column;gap:14px;border:2px solid var(--gold2)"><div><div class="label" style="color:var(--gold)">讓' + esc(COACH()) + '更認識你 · 1 分鐘</div><div class="small muted" style="margin-top:4px;line-height:1.6">幫我把接下來的練習調得更貼近你，填一次就好</div></div>' +
-    q('who', '1. 你現在主要在經營？') + q('channel', '2. 你最常在哪裡跟客人或夥伴聊？') + q('size', '3. 常聯絡的客人或夥伴大約幾位？') +
-    '<div style="display:flex;flex-direction:column;gap:6px"><label for="pgood" style="font-size:14px;font-weight:700">4. 你覺得自己最擅長的一件事</label><input type="text" id="pgood" value="' + esc(prof.good) + '" placeholder="例如：很會照顧老客人"></div>' +
-    '<div style="display:flex;flex-direction:column;gap:6px"><label for="pwant" style="font-size:14px;font-weight:700">5. 這次最想突破的一件事</label><input type="text" id="pwant" value="' + esc(prof.want) + '" placeholder="例如：客人說考慮時不知道怎麼接"></div>' +
+    (dirP ? q('who', '1. 團隊裡會主動做事的夥伴大約幾位？') + q('channel', '2. 你們平常怎麼對焦？') + q('size', '3. 如果你一週不在，團隊會？')
+      : q('who', '1. 你現在主要在經營？') + q('channel', '2. 你最常在哪裡跟客人或夥伴聊？') + q('size', '3. 常聯絡的客人或夥伴大約幾位？')) +
+    '<div style="display:flex;flex-direction:column;gap:6px"><label for="pgood" style="font-size:14px;font-weight:700">4. 你覺得自己最擅長的一件事</label><input type="text" id="pgood" value="' + esc(prof.good) + '" placeholder="' + (dirP ? '例如：很會帶新人上手' : '例如：很會照顧老客人') + '"></div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px"><label for="pwant" style="font-size:14px;font-weight:700">5. 這次最想突破的一件事</label><input type="text" id="pwant" value="' + esc(prof.want) + '" placeholder="' + (dirP ? '例如：我不在時夥伴也能自己動起來' : '例如：客人說考慮時不知道怎麼接') + '"></div>' +
     '<button type="button" class="btn" id="sendProf">送出</button></div>';
 }
 function bindProfile() {
