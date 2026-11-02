@@ -154,7 +154,7 @@ function bindMeets() {
   document.querySelectorAll('[data-ck]').forEach(function (b) {
     b.onclick = function () {
       var id = b.getAttribute('data-ck'), code = $('ck' + id).value.trim(), note = $('cn' + id).value.trim();
-      if (!code) { toast('先輸入口令'); return; }
+      if (!code) { toast('先輸入會議最後說的簽到關鍵字'); return; }
       if (note.length < 4) { toast('寫一句這場你要帶走的一件事'); return; }
       b.disabled = true; b.textContent = '簽到中…';
       post({ action: 'checkin', id: id, code: code, note: note }).then(function (r) {
@@ -223,8 +223,8 @@ function viewMain() {
     if (m.points) h += '<div style="font-size:14px;line-height:1.7;white-space:pre-wrap">' + esc(m.points) + '</div>';
     if (m.action) h += '<div style="background:var(--soft);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.6"><b>這週行動：</b>' + esc(m.action) + '</div>';
     if (m.present && m.note) h += '<div class="small muted">你帶走的：' + esc(m.note) + '</div>';
-    if (m.canCheck && !STALE) h += '<div style="border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px"><label for="ck' + esc(m.id) + '" style="font-size:14px;font-weight:700">輸入會議中公布的口令</label><input type="text" id="ck' + esc(m.id) + '" autocomplete="off">' +
-      '<label for="cn' + esc(m.id) + '" style="font-size:14px;font-weight:700">這場你要帶走的一件事</label><textarea id="cn' + esc(m.id) + '" rows="2" placeholder="一句話就好"></textarea>' +
+    if (m.canCheck && !STALE) h += '<div style="border-top:1px dashed var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:700">有參加研討會？完成簽到</div><div style="background:var(--soft);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7">會議快結束時，' + esc(COACH()) + '會說：「今天的簽到關鍵字是＿＿」<br>把聽到的那個詞打在下面，再寫一句心得，按簽到就完成了。</div><label for="ck' + esc(m.id) + '" style="font-size:14px;font-weight:700">1. 簽到關鍵字</label><input type="text" id="ck' + esc(m.id) + '" autocomplete="off" placeholder="例如：需求">' +
+      '<label for="cn' + esc(m.id) + '" style="font-size:14px;font-weight:700">2. 這場你要帶走的一件事</label><textarea id="cn' + esc(m.id) + '" rows="2" placeholder="一句話就好"></textarea>' +
       '<button type="button" class="btn" data-ck="' + esc(m.id) + '">簽到</button></div>';
     h += '</div>';
   });
