@@ -464,6 +464,9 @@ function demoData() {
   var stage = params.get('stage') || 'active';
   return {
     ok: true, stage: stage, deadline: '週四 18:00 前', coach: '心蘋', replyNote: '看過後會回覆你',
+    oa: '@768iwkya', profileDone: false,
+    intro: '你在盤點裡寫「我會先問客人最近用起來怎麼樣」，願意先聽客人說，這是很多人做不到的基本功。\n\n所以這次不是從頭教你，而是補上下一步：聽完之後，用一句話複述客人在意的點，讓她覺得被聽懂。我們一起練，有問題隨時問我。',
+    meets: [{ id: 'demo', date: '11/9', name: '第 1 週補強：客人說考慮時', points: '客人說「考慮一下」時，先問一句「你最在意的是哪一點？」', action: '找 1 位說過考慮的客人，用今天的問法再聊一次', present: false, today: true, canCheck: true }],
     member: { name: '小芸', track: params.get('track') || '35位', type: 'T1', typeText: '讓客人說出需求並成交' },
     task: { round: 1, week: 2, weeks: 4, range: '11/9–11/15', title: '先問客人的使用狀況，再推薦',
       steps: ['找 2 位雙十買過的客人', '用這句開頭：「這兩週用下來，頭髮有沒有不一樣？」', '聽完先複述一次：「所以你最在意的是……，對嗎？」'],
