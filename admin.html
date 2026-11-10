@@ -218,6 +218,10 @@ function renderPerson(p) {
     h += '<div style="font-size:13px;color:var(--gold);font-weight:700;margin-top:8px">' + esc(c.code + ' ' + c.name) + '</div>';
     c.items.forEach(function (x) { h += '<div class="it"><span class="mk">' + MARK[x.status] + '</span><span style="flex:1">' + esc(x.text) + (x.isNew ? ' <span class="badge b-up">新進步</span>' : '') + '</span><span class="small muted">' + (x.date ? esc(x.date) + ' ' : '') + STXT[x.status] + '</span></div>'; });
   });
+  if (p.unsure && p.unsure.length) {
+    h += '<div style="font-size:13px;color:var(--gold);font-weight:700;margin-top:12px">尚無法確認（可再追問）</div>';
+    p.unsure.forEach(function (u) { h += '<div class="it"><span class="mk">？</span><span style="flex:1">' + esc(u.code) + (u.note ? '<span class="small muted" style="display:block">' + esc(u.note) + '</span>' : '') + '</span><span class="small muted">' + esc(u.date) + ' ' + esc(u.src) + '</span></div>'; });
+  }
   h += '</div><div class="card"><h2>第 ' + p.round + ' 輪任務</h2>' + (p.tasks.length ? '' : '<div class="muted">還沒有任務</div>');
   p.tasks.forEach(function (t) { h += '<div class="it"><span class="mk" style="width:48px">第' + esc(t.week) + '週</span><span style="flex:1">' + (t.title ? esc(t.title) : '<span class="muted">尚未撰寫</span>') + '<span class="small muted" style="display:block">' + esc(t.range) + (t.published ? ' · 已發布' : ' · 未發布') + (t.report ? ' · ' + esc(t.report) : '') + '</span></span></div>'; });
   h += '</div><div class="card"><h2>回報紀錄</h2>' + (p.reports.length ? '' : '<div class="muted">還沒有回報</div>');
@@ -297,17 +301,18 @@ function viewTask(it) {
   h += '<div style="margin-top:8px"><button type="button" class="btn" id="approve">核准並發布</button></div></div>';
   return h;
 }
-var LEVELS = ['獨立', '提示後', '代做', '未看到', '無法判斷'];
+var LEVELS = ['獨立', '提示後', '代做', '沒做到', '沒機會', '尚無法確認'];
 function viewRep(it) {
   var d = it.draft, c = it.ctx, h = '';
   if (d.needMore) h += '<div class="warnbox">AI 認為證據可能不足：' + esc(d.needMoreReason) + '</div>';
+  if (d.compliance) h += '<div class="warnbox">合規提醒：' + esc(d.compliance) + '</div>';
   h += '<div class="card"><h2>第 ' + esc(c.week) + ' 週 · ' + esc(c.task) + '</h2><div><b>' + esc(c.status) + '</b> · ' + esc(c.count) + ' 位' + (c.stuck ? ' · 卡點：' + esc(c.stuck) : '') + '</div>' + (c.note ? '<div class="quote">' + esc(c.note) + '</div>' : '') +
     '<div class="imgs" style="margin-top:10px">' + (c.images.length ? c.images.map(function (s) { return '<img src="' + s + '" alt="回報截圖">'; }).join('') : '<span class="muted">沒有截圖</span>') + '</div></div>';
-  it.acts = c.actions.map(function (a) { var x = (d.actions || []).filter(function (y) { return y.code === a.code; })[0] || { level: '未看到', evidence: '' }; return { code: a.code, text: a.comp + '：' + a.text, level: x.level, evidence: x.evidence }; });
-  h += '<div class="card"><h2>關鍵動作</h2><div class="small muted" style="margin:-6px 0 4px">紅框「無法判斷」要你選定</div>';
+  it.acts = c.actions.map(function (a) { var x = (d.actions || []).filter(function (y) { return y.code === a.code; })[0] || { level: '沒機會', evidence: '' }; return { code: a.code, text: a.comp + '：' + a.text, level: x.level, evidence: x.evidence }; });
+  h += '<div class="card"><h2>關鍵動作</h2><div class="small muted" style="margin:-6px 0 4px;line-height:1.6">AI 看不到當次有沒有人協助：這段對話你陪過，就改成「提示後」。沒做到＝走到這一步卻沒做；沒機會＝對話沒走到這一步（不記錄）；尚無法確認＝看不出來（會記錄，可查回）。</div>';
   it.acts.forEach(function (a, i) {
     h += '<div class="act"><div class="h"><b>' + esc(a.code) + '</b><span class="small muted" style="flex:1">' + esc(a.text) + '</span></div><div class="lv" role="group" aria-label="' + esc(a.code) + ' 程度">' +
-      LEVELS.map(function (l) { return '<button type="button" data-i="' + i + '" data-l="' + l + '" class="' + (a.level === l ? 'on' : '') + (l === '無法判斷' && a.level === l ? ' warn' : '') + '">' + l + '</button>'; }).join('') +
+      LEVELS.map(function (l) { return '<button type="button" data-i="' + i + '" data-l="' + l + '" class="' + (a.level === l ? 'on' : '') + (l === '尚無法確認' && a.level === l ? ' warn' : '') + '">' + l + '</button>'; }).join('') +
       '</div><input type="text" id="ev' + i + '" value="' + esc(a.evidence) + '" aria-label="' + esc(a.code) + ' 證據" style="margin-top:8px"></div>';
   });
   h += '</div>';
