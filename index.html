@@ -259,11 +259,11 @@ function viewReport() {
       '<button type="button" class="step" id="minus" aria-label="減少">−</button><div id="count" style="font-size:22px;font-weight:700;min-width:20px" class="center">' + form.count + '</div>' +
       '<button type="button" class="step" id="plus" aria-label="增加">+</button></div></div>';
   }
-  if (form.status === '實際做了') {
-    h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:500">對話截圖<span class="small muted" style="font-weight:400">（可遮客人名字，最多 5 張）</span></div><div class="thumbs" id="thumbs">';
+  if (form.status === '實際做了' || form.status === '先練習了') {
+    h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:500">對話截圖<span class="small muted" style="font-weight:400">（' + (form.status === '先練習了' ? '有的話可以附上，' : '') + '可遮客人名字，最多 5 張）</span></div><div class="thumbs" id="thumbs">';
     form.images.forEach(function (src) { h += '<img class="thumb" src="' + src + '" alt="已選的截圖">'; });
     if (form.images.length < 5) h += '<label class="add" aria-label="新增截圖">' + ICON.plus + '<input type="file" id="file" accept="image/*" multiple style="display:none"></label>';
-    h += '</div></div>';
+    h += '</div><div class="small muted" style="line-height:1.6">上傳不了？直接把截圖傳到官方 LINE 給' + esc(COACH()) + '也可以。</div></div>';
   }
   if (form.status === '卡住了') {
     var stucks = ['不知道怎麼開口', '對方沒回', '問了但接不下去', '這週沒時間', '其他'];
@@ -288,7 +288,11 @@ function bindReport() {
   if ($('file')) $('file').onchange = function (e) {
     saveNote();
     var files = Array.prototype.slice.call(e.target.files, 0, 5 - form.images.length);
-    Promise.all(files.map(shrink)).then(function (list) { form.images = form.images.concat(list); render(); });
+    Promise.all(files.map(shrink)).then(function (list) {
+      var good = list.filter(Boolean);
+      if (good.length < list.length) toast('有 ' + (list.length - good.length) + ' 張圖讀不到，請改用手機截圖重新選，或直接傳到官方 LINE');
+      form.images = form.images.concat(good); render();
+    });
   };
   $('send').onclick = function () {
     saveNote();
@@ -310,8 +314,14 @@ function shrink(file) {
   return new Promise(function (ok) {
     var img = new Image();
     var url = URL.createObjectURL(file);
+    var done = false;
+    var fail = function () { if (done) return; done = true; URL.revokeObjectURL(url); ok(null); };
+    img.onerror = fail;
+    setTimeout(fail, 15000);
     img.onload = function () {
-      var max = 1280, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+      if (done) return; done = true;
+      // 依寬度縮（長截圖不會被縮到看不清），高度上限 4000 像素
+      var w = img.width, h = img.height, k = Math.min(1, 1080 / w, 4000 / h);
       var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
