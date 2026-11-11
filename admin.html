@@ -295,7 +295,7 @@ function viewTask(it) {
   var d = it.draft, c = it.ctx;
   var h = '<div class="card"><h2>第 ' + c.round + ' 輪第 ' + c.week + ' 週 · ' + esc(c.range) + '</h2>' + c.actions.map(function (a) { return '<div class="small muted">' + esc(a.code + ' ' + a.comp + '：' + a.text) + '</div>'; }).join('') + '<div class="small" style="margin-top:8px;color:var(--gold)">AI 的安排：' + esc(d.why) + '</div></div>';
   if (d.directionCheck && d.directionCheck !== '維持') h += '<div class="warnbox">方向檢查：' + esc(d.directionCheck) + '</div>';
-  h += '<div class="card"><h2>經銷商會看到的（可修改）</h2><label for="title" style="margin-top:0">這週改善</label><input type="text" id="title" value="' + esc(d.title) + '">';
+  h += '<div class="card"><h2>經銷商會看到的（可修改）</h2><label for="purpose" style="margin-top:0">這週練這個，是為了（顯示在任務上方）</label><input type="text" id="purpose" value="' + esc(d.purpose || '') + '"><label for="title">這週改善</label><input type="text" id="title" value="' + esc(d.title) + '">';
   for (var i = 0; i < 3; i++) h += '<label for="s' + i + '">步驟 ' + (i + 1) + '</label><textarea id="s' + i + '" style="min-height:56px">' + esc(d.steps[i] || '') + '</textarea>';
   if (c.week === 1) h += '<label style="font-weight:400;display:flex;gap:8px;align-items:center;min-height:44px"><input type="checkbox" id="today"> 第 1 週從今天開始</label>';
   h += '<div style="margin-top:8px"><button type="button" class="btn" id="approve">核准並發布</button></div></div>';
@@ -335,21 +335,21 @@ function bindItem() {
   };
 }
 function keepAndRender() {
-  var keep = {}; ['good', 'next', 'memo', 'why', 'regen'].forEach(function (k) { if ($(k)) keep[k] = $(k).value; });
+  var keep = {}; ['good', 'next', 'memo', 'why', 'regen', 'purpose'].forEach(function (k) { if ($(k)) keep[k] = $(k).value; });
   var inc = (cur.incs || []).map(function (x, i) { return $('inc' + i) ? $('inc' + i).value : x.add; });
   var y = window.scrollY;
   cur.draft.actions = cur.acts.map(function (a) { return { code: a.code, level: a.level, evidence: a.evidence }; });
   cur.draft.increments = (cur.incs || []).map(function (x, i) { return { label: x.label, add: inc[i] }; });
   if (keep.good !== undefined) cur.draft.good = keep.good; if (keep.next !== undefined) cur.draft.next = keep.next;
   renderItem();
-  if (keep.memo !== undefined && $('memo')) $('memo').value = keep.memo; if (keep.why !== undefined && $('why')) $('why').value = keep.why; if (keep.regen !== undefined) $('regen').value = keep.regen;
+  if (keep.memo !== undefined && $('memo')) $('memo').value = keep.memo; if (keep.why !== undefined && $('why')) $('why').value = keep.why; if (keep.regen !== undefined) $('regen').value = keep.regen; if (keep.purpose !== undefined && $('purpose')) $('purpose').value = keep.purpose;
   window.scrollTo(0, y);
 }
 function collect() {
   var it = cur;
   if (it.type === '方向') return { type: $('type').value, comp1: $('c1').value, comp2: $('c2').value, baseline1: $('b1').value, baseline2: $('b2').value, reason: $('reason').value, seen: it.draft.seen, missing: it.draft.missing };
   if (it.type === '認識') return { note: $('note').value };
-  if (it.type === '任務') return { title: $('title').value, steps: [$('s0').value, $('s1').value, $('s2').value], startToday: $('today') ? $('today').checked : false };
+  if (it.type === '任務') return { title: $('title').value, purpose: $('purpose') ? $('purpose').value : '', steps: [$('s0').value, $('s1').value, $('s2').value], startToday: $('today') ? $('today').checked : false };
   return { actions: it.acts.map(function (a, i) { return { code: a.code, level: a.level, evidence: $('ev' + i).value }; }),
     increments: (it.incs || []).map(function (x, i) { return { label: x.label, add: Number($('inc' + i).value) || 0 }; }),
     good: $('good').value, next: $('next').value, memo: $('memo').value };

@@ -189,6 +189,7 @@ function viewMain() {
   if (d.intro) h += '<div class="card" style="border-left:4px solid var(--gold)"><div class="label" style="color:var(--gold)">' + esc(COACH()) + '看到的你</div><div style="font-size:14px;line-height:1.85;margin-top:8px;white-space:pre-wrap">' + esc(d.intro) + '</div></div>';
   if (t) {
     h += '<div class="card" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:8px">' + ICON.task + '<div class="label">這週要改善</div></div>' +
+      (t.purpose ? '<div class="soft" style="font-size:14px;line-height:1.6;padding:10px 12px"><b>這週練這個，是為了：</b>' + esc(t.purpose) + '</div>' : '') +
       '<div class="serif" style="font-size:20px;line-height:1.4">' + esc(t.title) + '</div><div style="display:flex;flex-direction:column;gap:10px">';
     t.steps.forEach(function (s, i) {
       h += '<div class="row" style="align-items:flex-start;gap:10px"><div class="num">' + (i + 1) + '</div><div style="font-size:14px;line-height:1.6">' + esc(s) + '</div></div>';
@@ -479,7 +480,7 @@ function demoData() {
     intro: '你在盤點裡寫「我會先問客人最近用起來怎麼樣」，願意先聽客人說，這是很多人做不到的基本功。\n\n所以這次不是從頭教你，而是補上下一步：聽完之後，用一句話複述客人在意的點，讓她覺得被聽懂。我們一起練，有問題隨時問我。',
     meets: [{ id: 'demo', date: '11/9', name: '第 1 週補強：客人說考慮時', points: '客人說「考慮一下」時，先問一句「你最在意的是哪一點？」', action: '找 1 位說過考慮的客人，用今天的問法再聊一次', present: false, today: true, canCheck: true }],
     member: { name: '小芸', track: params.get('track') || '35位', type: 'T1', typeText: '讓客人說出需求並成交' },
-    task: { round: 1, week: 2, weeks: 4, range: '11/9–11/15', title: '先問客人的使用狀況，再推薦',
+    task: { round: 1, week: 2, weeks: 4, range: '11/9–11/15', purpose: '讓客人願意固定回購', title: '先問客人的使用狀況，再推薦',
       steps: ['找 2 位雙十買過的客人', '用這句開頭：「這兩週用下來，頭髮有沒有不一樣？」', '聽完先複述一次：「所以你最在意的是……，對嗎？」'],
       evidence: '附對話截圖（可遮名字）' },
     reported: false,
