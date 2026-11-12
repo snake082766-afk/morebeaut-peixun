@@ -59,7 +59,8 @@ var API = 'https://script.google.com/macros/s/AKfycbxzJQgf9zouBQEHfme6B__etQj1A1
 var params = new URLSearchParams(location.search);
 var CODE = params.get('u') || '';
 /* 用專屬連結開過一次後記住，之後從官方 LINE 圖文選單的共用網址打開也會進到自己的頁面 */
-try { if (CODE) localStorage.setItem('peixun_code', CODE); else CODE = localStorage.getItem('peixun_code') || ''; } catch (e) {}
+var PEEK = params.get('peek') === '1'; // 心蘋從後台預覽：只看不存、不能送出
+try { if (CODE && !PEEK) localStorage.setItem('peixun_code', CODE); else if (!CODE) CODE = localStorage.getItem('peixun_code') || ''; } catch (e) {}
 var DEMO = params.get('demo') === '1' || !API;
 var data = null;
 var view = 'main';
@@ -105,7 +106,7 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 /* 先顯示上次的內容，背景同時取得最新資料（只存在這支手機，讀不到就照常等待） */
 var STALE = false;
 function cacheKey() { return 'peixun_card_' + CODE; }
-function saveCache() { try { localStorage.setItem(cacheKey(), JSON.stringify(data)); } catch (e) {} }
+function saveCache() { if (PEEK) return; try { localStorage.setItem(cacheKey(), JSON.stringify(data)); } catch (e) {} }
 function readCache() { try { return JSON.parse(localStorage.getItem(cacheKey()) || 'null'); } catch (e) { return null; } }
 
 function load() {
@@ -132,6 +133,7 @@ function load() {
 
 function post(body) {
   body.u = CODE;
+  if (PEEK) { toast('預覽模式只能查看，不能送出'); return Promise.resolve({ ok: false, error: '預覽模式只能查看，不能送出' }); }
   if (DEMO) return new Promise(function (ok) { setTimeout(function () { ok({ ok: true }); }, 600); });
   return fetch(API, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); });
 }
@@ -139,6 +141,10 @@ function post(body) {
 /* ---------- 畫面 ---------- */
 
 function render() {
+  renderView();
+  if (PEEK && $('app')) $('app').insertAdjacentHTML('afterbegin', '<div role="status" style="background:var(--dark,#2b2b2b);color:#fff;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.6">預覽模式：這是夥伴看到的畫面。只能查看，不會換掉你手機上記住的卡，也不能送出。</div>');
+}
+function renderView() {
   var app = $('app');
   if (data.stage === 'diagnosis') { app.innerHTML = viewDiagnosis(); bindDiagnosis(); return; }
   if (data.stage === 'waiting') { app.innerHTML = viewWaiting() + '<div style="margin-top:14px">' + askBtn('想問：') + '</div>'; return; }

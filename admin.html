@@ -209,7 +209,8 @@ function loadPerson(id) { loading(); get('person', '&id=' + encodeURIComponent(i
 function renderPerson(p) {
   var h = '<button type="button" class="back" id="back">← 回到總覽</button>';
   h += '<div><div class="small muted">' + esc([p.track, p.level, p.status].filter(String).join(' · ')) + ' · ' + esc(p.id) + '</div><h1>' + esc(p.name) + '</h1><div>' +
-    (p.typeText ? '<span class="tag dark">' + esc(p.typeText) + '</span>' : '<span class="tag">尚未確認方向</span>') + p.comps.map(function (c) { return '<span class="tag">' + esc(c.code + ' ' + c.name) + '</span>'; }).join('') + '</div></div>';
+    (p.typeText ? '<span class="tag dark">' + esc(p.typeText) + '</span>' : '<span class="tag">尚未確認方向</span>') + p.comps.map(function (c) { return '<span class="tag">' + esc(c.code + ' ' + c.name) + '</span>'; }).join('') + '</div>' +
+    (p.link ? '<a class="btn2" style="display:flex;justify-content:center;align-items:center;min-height:44px;margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="' + esc(p.link + (p.link.indexOf('?') >= 0 ? '&' : '?') + 'peek=1') + '">看他的陪跑卡（預覽）</a>' : '') + '</div>';
   if (p.intro) h += '<div class="card"><h2>心蘋看到的你（他看得到）</h2><div style="line-height:1.8;white-space:pre-wrap">' + esc(p.intro) + '</div></div>';
   if (p.profile) h += '<div class="card"><h2>他的背景（本人填寫）</h2><div><span class="tag">' + esc(p.profile.who) + '</span><span class="tag">' + esc(p.profile.channel) + '</span><span class="tag">' + esc(p.profile.size) + '</span></div><div style="margin-top:8px"><b>最擅長：</b>' + esc(p.profile.good) + '</div><div><b>最想突破：</b>' + esc(p.profile.want) + '</div></div>';
   h += '<div class="two"><div>';
